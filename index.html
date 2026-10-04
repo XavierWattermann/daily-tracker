@@ -93,7 +93,7 @@
         </div>
 
         <div class="flex items-center gap-4 mt-5">
-          <button id="saveScoresBtn" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm px-6 py-2.5 rounded-xl transition">
+          <button id="saveScoresBtn" type="button" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm px-6 py-2.5 rounded-xl transition cursor-pointer">
             Save Scores
           </button>
           <span id="saveStatus" class="text-xs font-semibold text-emerald-400 hidden">✓ Saved to cloud</span>
@@ -118,7 +118,7 @@
         </table>
       </div>
 
-      <!-- Daily Trash Talk & Banter (Placed Directly Below Standings) -->
+      <!-- Daily Trash Talk & Banter (Directly below scores) -->
       <div class="glass border border-slate-800 rounded-2xl p-5 space-y-4">
         <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Daily Trash Talk & Banter</h3>
         <div id="commentsList" class="space-y-3 max-h-72 overflow-y-auto pr-2">
@@ -161,9 +161,12 @@
         <div id="playerNamesConfig" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <!-- Generated via JS -->
         </div>
-        <button id="savePlayerNamesBtn" class="mt-3 bg-slate-800 hover:bg-slate-700 text-xs font-semibold px-4 py-2 rounded-lg">
-          Save Names
-        </button>
+        <div class="flex items-center gap-3 mt-4">
+          <button id="savePlayerNamesBtn" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-2 rounded-lg transition cursor-pointer">
+            Save Names
+          </button>
+          <span id="playerSaveStatus" class="text-xs text-emerald-400 font-semibold hidden">✓ Names Updated</span>
+        </div>
       </div>
     </section>
 
@@ -171,7 +174,7 @@
 
   <script>
     // -------------------------------------------------------------
-    // 1. FIREBASE CONFIGURATION
+    // 1. CONFIGURATION & FIREBASE INITIALIZATION
     // -------------------------------------------------------------
     const PASSPHRASE = "clownz";
 
@@ -190,7 +193,7 @@
       firebase.initializeApp(firebaseConfig);
       db = firebase.database();
     } catch (e) {
-      console.warn("Firebase initialization issue:", e);
+      console.error("Firebase init failed:", e);
     }
 
     const DEFAULT_CONFIG = {
@@ -212,8 +215,13 @@
       activePlayer: localStorage.getItem("selected_player_id") || "p1",
       scores: {},
       comments: {},
-      config: DEFAULT_CONFIG
+      config: JSON.parse(JSON.stringify(DEFAULT_CONFIG))
     };
+
+    // Helper: Safely resolve player display name
+    function getPlayerName(pId) {
+      return appState.config.players[pId]?.name || `Player ${pId.replace('p', '')}`;
+    }
 
     // -------------------------------------------------------------
     // 2. PASSPHRASE & IDENTITY PERSISTENCE
@@ -250,7 +258,12 @@
     // -------------------------------------------------------------
     // 3. CORE APP INITIALIZATION & LISTENERS
     // -------------------------------------------------------------
+    let isInitialized = false;
+
     function initApp() {
+      if (isInitialized) return;
+      isInitialized = true;
+
       const dateInput = document.getElementById("currentDateInput");
       dateInput.value = appState.date;
       dateInput.addEventListener("change", (e) => {
@@ -275,29 +288,41 @@
         renderDailyTable();
       });
 
+      document.getElementById("saveScoresBtn").addEventListener("click", saveScoresForActivePlayer);
+
       setupTabs();
       setupCommentForm();
       setupConfigHandlers();
 
+      // Realtime Database Listeners
       if (db) {
         db.ref("scores").on("value", (snap) => {
           appState.scores = snap.val() || {};
           renderAll();
         });
+
         db.ref("comments").on("value", (snap) => {
           appState.comments = snap.val() || {};
           renderComments();
         });
-        db.ref("config").on("value", (snap) => {
-          const val = snap.val();
-          if (val) appState.config = val;
-          updatePlayerSelectOptions();
-          renderConfigTab();
-          renderAll();
+
+        // Listen to config/players specifically to guarantee name synchronization
+        db.ref("config/players").on("value", (snap) => {
+          const remotePlayers = snap.val();
+          if (remotePlayers) {
+            Object.keys(DEFAULT_CONFIG.players).forEach(pId => {
+              if (remotePlayers[pId]) {
+                appState.config.players[pId] = remotePlayers[pId];
+              }
+            });
+            updatePlayerSelectOptions();
+            renderConfigTab();
+            renderAll();
+          }
         });
-      } else {
-        renderAll();
       }
+
+      renderAll();
     }
 
     function shiftDate(deltaDays) {
@@ -309,7 +334,7 @@
     }
 
     // -------------------------------------------------------------
-    // 4. RENDERING & SCORE SAVING ROUTINES
+    // 4. RENDERING ROUTINES
     // -------------------------------------------------------------
     function renderAll() {
       renderEntryInputs();
@@ -321,13 +346,12 @@
 
     function renderEntryInputs() {
       const container = document.getElementById("gameEntryInputs");
-      const pName = appState.config.players[appState.activePlayer]?.name || "Player";
-      document.getElementById("activePlayerNameLabel").innerText = pName;
+      document.getElementById("activePlayerNameLabel").innerText = getPlayerName(appState.activePlayer);
 
       const dayScores = appState.scores[appState.date]?.[appState.activePlayer] || {};
 
       container.innerHTML = Object.entries(appState.config.games).map(([gKey, g]) => {
-        const val = dayScores[gKey] !== undefined ? dayScores[gKey] : "";
+        const val = (dayScores[gKey] !== undefined && dayScores[gKey] !== null) ? dayScores[gKey] : "";
         return `
           <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
             <label class="block text-xs font-semibold text-slate-300 mb-1">${g.name}</label>
@@ -337,29 +361,30 @@
           </div>
         `;
       }).join("");
-
-      document.getElementById("saveScoresBtn").onclick = saveScoresForActivePlayer;
     }
 
     function saveScoresForActivePlayer() {
       const pId = appState.activePlayer;
       const updates = {};
-      let hasUpdates = false;
+      let hasAnyValue = false;
 
       Object.keys(appState.config.games).forEach(gKey => {
         const input = document.getElementById(`input_${gKey}`);
-        if (input && input.value !== "") {
-          updates[gKey] = Number(input.value);
-          hasUpdates = true;
+        if (input && input.value.trim() !== "") {
+          const num = Number(input.value);
+          if (!isNaN(num)) {
+            updates[gKey] = num;
+            hasAnyValue = true;
+          }
         }
       });
 
-      if (!hasUpdates) {
-        alert("Enter at least one score before saving.");
+      if (!hasAnyValue) {
+        alert("Please enter at least one score before saving.");
         return;
       }
 
-      // Merge locally so UI updates right away
+      // Update local memory state immediately
       if (!appState.scores[appState.date]) {
         appState.scores[appState.date] = {};
       }
@@ -368,13 +393,18 @@
       }
       Object.assign(appState.scores[appState.date][pId], updates);
 
-      // Push partial update to Firebase without overwriting unentered games
+      // Persist each entered score to Firebase using set() per key
       if (db) {
-        db.ref(`scores/${appState.date}/${pId}`).update(updates)
+        const promises = Object.entries(updates).map(([gKey, val]) => {
+          return db.ref(`scores/${appState.date}/${pId}/${gKey}`).set(val);
+        });
+
+        Promise.all(promises)
           .then(() => showSaveFeedback("✓ Saved to cloud"))
           .catch((err) => {
-            console.error("Firebase write error:", err);
-            showSaveFeedback("⚠️ Error saving to cloud", true);
+            console.error("Firebase score write error:", err);
+            showSaveFeedback("⚠️ Error writing to Firebase", true);
+            alert("Database write error: " + err.message);
           });
       } else {
         showSaveFeedback("✓ Saved locally");
@@ -389,22 +419,34 @@
       const el = document.getElementById("saveStatus");
       el.innerText = msg;
       el.className = `text-xs font-semibold ${isError ? 'text-rose-400' : 'text-emerald-400'} block`;
-      setTimeout(() => { el.className = "text-xs font-semibold text-emerald-400 hidden"; }, 3000);
+      setTimeout(() => {
+        el.className = "text-xs font-semibold text-emerald-400 hidden";
+      }, 3000);
     }
 
     function renderDailyTable() {
       const tbody = document.getElementById("dailyTableBody");
       const dateScores = appState.scores[appState.date] || {};
 
-      tbody.innerHTML = Object.entries(appState.config.players).map(([pId, p]) => {
+      tbody.innerHTML = ["p1", "p2", "p3", "p4"].map(pId => {
         const pScores = dateScores[pId] || {};
         const isSelf = pId === appState.activePlayer;
+        const displayName = getPlayerName(pId);
+
         return `
           <tr class="${isSelf ? 'bg-amber-400/5' : ''}">
-            <td class="py-2.5 font-sans font-medium text-slate-200">${p.name} ${isSelf ? '<span class="text-[10px] text-amber-400 font-bold">(You)</span>' : ''}</td>
-            <td class="py-2.5 ${pScores.krillion !== undefined ? 'text-amber-300 font-bold' : 'text-slate-600'}">${pScores.krillion ?? '-'}</td>
-            <td class="py-2.5 ${pScores.more_less !== undefined ? 'text-amber-300 font-bold' : 'text-slate-600'}">${pScores.more_less ?? '-'}</td>
-            <td class="py-2.5 ${pScores.clueless !== undefined ? 'text-amber-300 font-bold' : 'text-slate-600'}">${pScores.clueless ?? '-'}</td>
+            <td class="py-2.5 font-sans font-medium text-slate-200">
+              ${displayName} ${isSelf ? '<span class="text-[10px] text-amber-400 font-bold ml-1">(You)</span>' : ''}
+            </td>
+            <td class="py-2.5 ${pScores.krillion !== undefined ? 'text-amber-300 font-bold' : 'text-slate-600'}">
+              ${pScores.krillion !== undefined ? pScores.krillion : '-'}
+            </td>
+            <td class="py-2.5 ${pScores.more_less !== undefined ? 'text-amber-300 font-bold' : 'text-slate-600'}">
+              ${pScores.more_less !== undefined ? pScores.more_less : '-'}
+            </td>
+            <td class="py-2.5 ${pScores.clueless !== undefined ? 'text-amber-300 font-bold' : 'text-slate-600'}">
+              ${pScores.clueless !== undefined ? pScores.clueless : '-'}
+            </td>
           </tr>
         `;
       }).join("");
@@ -418,25 +460,26 @@
         let bestVal = null;
         let winners = [];
 
-        Object.entries(appState.config.players).forEach(([pId, p]) => {
+        ["p1", "p2", "p3", "p4"].forEach(pId => {
           const val = dateScores[pId]?.[gKey];
           if (val !== undefined && val !== null) {
+            const name = getPlayerName(pId);
             if (bestVal === null) {
               bestVal = val;
-              winners = [p.name];
+              winners = [name];
             } else if (g.direction === "high") {
               if (val > bestVal) {
                 bestVal = val;
-                winners = [p.name];
+                winners = [name];
               } else if (val === bestVal) {
-                winners.push(p.name);
+                winners.push(name);
               }
             } else { // low
               if (val < bestVal) {
                 bestVal = val;
-                winners = [p.name];
+                winners = [name];
               } else if (val === bestVal) {
-                winners.push(p.name);
+                winners.push(name);
               }
             }
           }
@@ -466,13 +509,14 @@
         
         function getWinner(gKey, dir) {
           let bVal = null, w = [];
-          Object.entries(appState.config.players).forEach(([pId, p]) => {
+          ["p1", "p2", "p3", "p4"].forEach(pId => {
             const v = dScores[pId]?.[gKey];
-            if (v !== undefined) {
+            if (v !== undefined && v !== null) {
+              const name = getPlayerName(pId);
               if (bVal === null || (dir === "high" ? v > bVal : v < bVal)) {
-                bVal = v; w = [p.name];
+                bVal = v; w = [name];
               } else if (v === bVal) {
-                w.push(p.name);
+                w.push(name);
               }
             }
           });
@@ -519,7 +563,7 @@
         if (!text) return;
 
         const newComment = {
-          player: appState.config.players[appState.activePlayer]?.name || "Anonymous",
+          player: getPlayerName(appState.activePlayer),
           text: text,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         };
@@ -555,18 +599,18 @@
 
     function updatePlayerSelectOptions() {
       const select = document.getElementById("activePlayerSelect");
-      select.innerHTML = Object.entries(appState.config.players).map(([id, p]) => `
-        <option value="${id}">${p.name}</option>
+      select.innerHTML = ["p1", "p2", "p3", "p4"].map(id => `
+        <option value="${id}">${getPlayerName(id)}</option>
       `).join("");
       select.value = appState.activePlayer;
     }
 
     function renderConfigTab() {
       const container = document.getElementById("playerNamesConfig");
-      container.innerHTML = Object.entries(appState.config.players).map(([id, p]) => `
+      container.innerHTML = ["p1", "p2", "p3", "p4"].map(id => `
         <div>
           <label class="block text-xs text-slate-400 mb-1">${id.toUpperCase()}</label>
-          <input id="cfg_player_${id}" value="${p.name}" class="bg-slate-900 border border-slate-700 text-sm rounded-lg px-3 py-1.5 w-full text-white" />
+          <input id="cfg_player_${id}" value="${getPlayerName(id)}" class="bg-slate-900 border border-slate-700 text-sm rounded-lg px-3 py-1.5 w-full text-white focus:outline-none focus:border-amber-400" />
         </div>
       `).join("");
     }
@@ -574,16 +618,27 @@
     function setupConfigHandlers() {
       renderConfigTab();
       document.getElementById("savePlayerNamesBtn").onclick = () => {
-        Object.keys(appState.config.players).forEach(id => {
+        const payload = {};
+        ["p1", "p2", "p3", "p4"].forEach(id => {
           const val = document.getElementById(`cfg_player_${id}`)?.value.trim();
-          if (val) appState.config.players[id].name = val;
+          if (val) {
+            payload[id] = { name: val };
+            appState.config.players[id] = { name: val };
+          }
         });
+
         if (db) {
-          db.ref("config/players").set(appState.config.players);
+          db.ref("config/players").set(payload).then(() => {
+            const status = document.getElementById("playerSaveStatus");
+            status.classList.remove("hidden");
+            setTimeout(() => status.classList.add("hidden"), 3000);
+          }).catch(err => {
+            alert("Failed to save names: " + err.message);
+          });
         }
+
         updatePlayerSelectOptions();
         renderAll();
-        alert("Player names saved.");
       };
     }
 
