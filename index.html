@@ -58,11 +58,11 @@
     <!-- DATE PICKER ROW -->
     <div class="flex items-center justify-between glass border border-slate-800 rounded-2xl p-4">
       <div class="flex items-center gap-2">
-        <button id="prevDayBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm">◀</button>
+        <button id="prevDayBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm cursor-pointer">◀</button>
         <input type="date" id="currentDateInput" class="bg-slate-900 border border-slate-700 text-sm rounded-lg px-3 py-1.5 text-white font-mono focus:outline-none focus:border-amber-400" />
-        <button id="nextDayBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm">▶</button>
+        <button id="nextDayBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm cursor-pointer">▶</button>
       </div>
-      <button id="todayBtn" class="text-xs text-amber-400 hover:underline font-semibold">Today</button>
+      <button id="todayBtn" class="text-xs text-amber-400 hover:underline font-semibold cursor-pointer">Today</button>
     </div>
 
     <!-- DAILY WINNERS BANNER -->
@@ -127,7 +127,7 @@
         <form id="commentForm" class="flex gap-2 pt-2 border-t border-slate-800">
           <input id="commentInput" type="text" placeholder="Drop a comment for today..." 
                  class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-amber-400" />
-          <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-sm transition">
+          <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-sm transition cursor-pointer">
             Post
           </button>
         </form>
@@ -174,6 +174,16 @@
 
   <script>
     // -------------------------------------------------------------
+    // LOCAL CALENDAR DATE HELPER (Avoids UTC cutoff shifts)
+    // -------------------------------------------------------------
+    function getLocalDateString(d = new Date()) {
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, '0');
+      const day = String(d.getDate()).padStart(2, '0');
+      return `${year}-${month}-${day}`;
+    }
+
+    // -------------------------------------------------------------
     // 1. CONFIGURATION & FIREBASE INITIALIZATION
     // -------------------------------------------------------------
     const PASSPHRASE = "clownz";
@@ -211,14 +221,13 @@
     };
 
     let appState = {
-      date: new Date().toISOString().split("T")[0],
+      date: getLocalDateString(),
       activePlayer: localStorage.getItem("selected_player_id") || "p1",
       scores: {},
       comments: {},
       config: JSON.parse(JSON.stringify(DEFAULT_CONFIG))
     };
 
-    // Helper: Safely resolve player display name
     function getPlayerName(pId) {
       return appState.config.players[pId]?.name || `Player ${pId.replace('p', '')}`;
     }
@@ -274,7 +283,7 @@
       document.getElementById("prevDayBtn").addEventListener("click", () => shiftDate(-1));
       document.getElementById("nextDayBtn").addEventListener("click", () => shiftDate(1));
       document.getElementById("todayBtn").addEventListener("click", () => {
-        appState.date = new Date().toISOString().split("T")[0];
+        appState.date = getLocalDateString();
         dateInput.value = appState.date;
         renderAll();
       });
@@ -294,7 +303,6 @@
       setupCommentForm();
       setupConfigHandlers();
 
-      // Realtime Database Listeners
       if (db) {
         db.ref("scores").on("value", (snap) => {
           appState.scores = snap.val() || {};
@@ -306,7 +314,6 @@
           renderComments();
         });
 
-        // Listen to config/players specifically to guarantee name synchronization
         db.ref("config/players").on("value", (snap) => {
           const remotePlayers = snap.val();
           if (remotePlayers) {
@@ -326,9 +333,10 @@
     }
 
     function shiftDate(deltaDays) {
-      const cur = new Date(appState.date + "T00:00:00");
+      const parts = appState.date.split("-").map(Number);
+      const cur = new Date(parts[0], parts[1] - 1, parts[2]);
       cur.setDate(cur.getDate() + deltaDays);
-      appState.date = cur.toISOString().split("T")[0];
+      appState.date = getLocalDateString(cur);
       document.getElementById("currentDateInput").value = appState.date;
       renderAll();
     }
@@ -384,7 +392,6 @@
         return;
       }
 
-      // Update local memory state immediately
       if (!appState.scores[appState.date]) {
         appState.scores[appState.date] = {};
       }
@@ -393,7 +400,6 @@
       }
       Object.assign(appState.scores[appState.date][pId], updates);
 
-      // Persist each entered score to Firebase using set() per key
       if (db) {
         const promises = Object.entries(updates).map(([gKey, val]) => {
           return db.ref(`scores/${appState.date}/${pId}/${gKey}`).set(val);
