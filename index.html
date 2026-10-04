@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Daily Game League</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <style>
+    .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased pb-16">
+
+  <!-- PASSPHRASE MODAL -->
+  <div id="authGate" class="fixed inset-0 bg-slate-950/95 flex items-center justify-center p-4 z-50">
+    <div class="glass border border-slate-800 p-8 rounded-2xl max-w-sm w-full shadow-2xl text-center">
+      <div class="text-4xl mb-3">🤡</div>
+      <h2 class="text-xl font-bold tracking-tight mb-1 text-white">Daily League Passphrase</h2>
+      <p class="text-sm text-slate-400 mb-6">Enter the group passphrase to continue.</p>
+      <form id="authForm" class="space-y-4">
+        <input id="passphraseInput" type="password" placeholder="Passphrase" autocomplete="off"
+               class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-center tracking-widest text-lg font-mono focus:outline-none focus:border-amber-400" />
+        <p id="authError" class="text-xs text-rose-400 hidden">Incorrect passphrase. Try again.</p>
+        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">
+          Unlock App
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MAIN APP CONTAINER -->
+  <div id="appContainer" class="hidden max-w-4xl mx-auto px-4 pt-6 space-y-6">
+    
+    <!-- HEADER & ACTIVE PLAYER SELECTOR -->
+    <header class="glass border border-slate-800 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
+      <div>
+        <h1 class="text-2xl font-black tracking-tight text-white flex items-center gap-2">
+          🏆 Daily League
+        </h1>
+        <p class="text-xs text-slate-400">Krillion • More/Less • Clueless</p>
+      </div>
+
+      <!-- Remembered Active Player Switcher -->
+      <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl">
+        <span class="text-xs uppercase font-bold text-slate-400">You:</span>
+        <select id="activePlayerSelect" class="bg-transparent text-sm font-semibold text-amber-400 focus:outline-none cursor-pointer">
+          <option value="p1">Player 1</option>
+          <option value="p2">Player 2</option>
+          <option value="p3">Player 3</option>
+          <option value="p4">Player 4</option>
+        </select>
+      </div>
+    </header>
+
+    <!-- DATE PICKER ROW -->
+    <div class="flex items-center justify-between glass border border-slate-800 rounded-2xl p-4">
+      <div class="flex items-center gap-2">
+        <button id="prevDayBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm">◀</button>
+        <input type="date" id="currentDateInput" class="bg-slate-900 border border-slate-700 text-sm rounded-lg px-3 py-1.5 text-white font-mono focus:outline-none focus:border-amber-400" />
+        <button id="nextDayBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm">▶</button>
+      </div>
+      <button id="todayBtn" class="text-xs text-amber-400 hover:underline font-semibold">Today</button>
+    </div>
+
+    <!-- DAILY WINNERS BANNER -->
+    <div id="winnersBanner" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <!-- Injected via JS -->
+    </div>
+
+    <!-- TABS NAVIGATION -->
+    <nav class="flex border-b border-slate-800 text-sm font-medium">
+      <button data-tab="scoresTab" class="tab-btn px-4 py-2.5 border-b-2 border-amber-400 text-amber-400 font-bold">Daily Scores</button>
+      <button data-tab="historyTab" class="tab-btn px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-white">Scoreboard History</button>
+      <button data-tab="chatTab" class="tab-btn px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-white">Daily Banter</button>
+      <button data-tab="configTab" class="tab-btn px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-white">Settings</button>
+    </nav>
+
+    <!-- TAB 1: DAILY SCORES TABLE & INPUT -->
+    <section id="scoresTab" class="space-y-6">
+      <!-- Quick Entry Box for Active Player -->
+      <div class="glass border border-slate-800 rounded-2xl p-5">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">
+          Enter Your Scores (<span id="activePlayerNameLabel">Player 1</span>)
+        </h3>
+        <div id="gameEntryInputs" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <!-- Populated via JS based on games list -->
+        </div>
+        <button id="saveScoresBtn" class="mt-4 bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm px-6 py-2.5 rounded-xl transition">
+          Save Scores for Selected Date
+        </button>
+      </div>
+
+      <!-- Group Summary for Selected Date -->
+      <div class="glass border border-slate-800 rounded-2xl p-5 overflow-x-auto">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Today's Group Standings</h3>
+        <table class="w-full text-left text-sm" id="dailyTable">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 text-xs">
+              <th class="py-2">Player</th>
+              <th class="py-2">Krillion <span class="text-[10px] text-slate-500">(High)</span></th>
+              <th class="py-2">More/Less <span class="text-[10px] text-slate-500">(/25)</span></th>
+              <th class="py-2">Clueless <span class="text-[10px] text-slate-500">(Low)</span></th>
+            </tr>
+          </thead>
+          <tbody id="dailyTableBody" class="divide-y divide-slate-800 font-mono">
+            <!-- Injected via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 2: SCOREBOARD HISTORY -->
+    <section id="historyTab" class="hidden glass border border-slate-800 rounded-2xl p-5">
+      <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">Past 30 Days Summary</h3>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm" id="historyTable">
+          <thead>
+            <tr class="border-b border-slate-800 text-slate-400 text-xs">
+              <th class="py-2">Date</th>
+              <th class="py-2">Krillion Top</th>
+              <th class="py-2">More/Less Top</th>
+              <th class="py-2">Clueless Top</th>
+            </tr>
+          </thead>
+          <tbody id="historyTableBody" class="divide-y divide-slate-800">
+            <!-- Injected via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- TAB 3: DAILY BANTER (COMMENTS) -->
+    <section id="chatTab" class="hidden glass border border-slate-800 rounded-2xl p-5 space-y-4">
+      <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Daily Trash Talk & Notes</h3>
+      <div id="commentsList" class="space-y-3 max-h-80 overflow-y-auto pr-2">
+        <p class="text-xs text-slate-500 italic">No notes left for this day yet.</p>
+      </div>
+      <form id="commentForm" class="flex gap-2 pt-2 border-t border-slate-800">
+        <input id="commentInput" type="text" placeholder="Drop a comment for today..." 
+               class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-amber-400" />
+        <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-sm transition">
+          Post
+        </button>
+      </form>
+    </section>
+
+    <!-- TAB 4: SETTINGS (RENAME PLAYERS & GAMES) -->
+    <section id="configTab" class="hidden glass border border-slate-800 rounded-2xl p-5 space-y-6">
+      <div>
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Player Names</h3>
+        <div id="playerNamesConfig" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Generated via JS -->
+        </div>
+        <button id="savePlayerNamesBtn" class="mt-3 bg-slate-800 hover:bg-slate-700 text-xs font-semibold px-4 py-2 rounded-lg">
+          Save Names
+        </button>
+      </div>
+    </section>
+
+  </div>
+
+  <script>
+    // -------------------------------------------------------------
+    // 1. CONFIGURATION & FIREBASE SETUP
+    // -------------------------------------------------------------
+    const PASSPHRASE = "clownz";
+
+    // PASTE YOUR FIREBASE CONFIG HERE:
+    const firebaseConfig = {
+      apiKey: "AIzaSyA3KaAE_BmoQFScygVXbUwTGTym7ffAKpg",
+      authDomain: "daily-game-tracker.firebaseapp.com",
+      databaseURL: "https://daily-game-tracker-default-rtdb.firebaseio.com",
+      projectId: "daily-game-tracker",
+      storageBucket: "daily-game-tracker.firebasestorage.app",
+      messagingSenderId: "886711418564",
+      appId: "1:886711418564:web:de9583648c650ef9fc9391"
+    };
+
+    let db = null;
+    try {
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+    } catch (e) {
+      console.warn("Firebase not configured or invalid credentials; running in mock/offline mode.", e);
+    }
+
+    // Default Schema Configuration
+    const DEFAULT_CONFIG = {
+      players: {
+        p1: { name: "Player 1" },
+        p2: { name: "Player 2" },
+        p3: { name: "Player 3" },
+        p4: { name: "Player 4" }
+      },
+      games: {
+        krillion: { name: "Krillion", direction: "high", min: 0, max: 2000, step: 1 },
+        more_less: { name: "More/Less", direction: "high", min: 0, max: 25, step: 1 },
+        clueless: { name: "Clueless", direction: "low", min: 1, max: 100, step: 1 }
+      }
+    };
+
+    let appState = {
+      date: new Date().toISOString().split("T")[0],
+      activePlayer: localStorage.getItem("selected_player_id") || "p1",
+      scores: {},       // { date: { p1: { krillion: 400, ... } } }
+      comments: {},     // { date: [ { player, text, ts } ] }
+      config: DEFAULT_CONFIG
+    };
+
+    // -------------------------------------------------------------
+    // 2. PASSPHRASE & IDENTITY PERSISTENCE
+    // -------------------------------------------------------------
+    const authGate = document.getElementById("authGate");
+    const appContainer = document.getElementById("appContainer");
+    const authForm = document.getElementById("authForm");
+    const passphraseInput = document.getElementById("passphraseInput");
+    const authError = document.getElementById("authError");
+
+    function checkAuth() {
+      if (localStorage.getItem("league_unlocked") === PASSPHRASE) {
+        authGate.classList.add("hidden");
+        appContainer.classList.remove("hidden");
+        initApp();
+      } else {
+        authGate.classList.remove("hidden");
+        appContainer.classList.add("hidden");
+      }
+    }
+
+    authForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      if (passphraseInput.value.trim().toLowerCase() === PASSPHRASE) {
+        localStorage.setItem("league_unlocked", PASSPHRASE);
+        authError.classList.add("hidden");
+        checkAuth();
+      } else {
+        authError.classList.remove("hidden");
+        passphraseInput.value = "";
+      }
+    });
+
+    // -------------------------------------------------------------
+    // 3. CORE APP INITIALIZATION & FIREBASE LISTENERS
+    // -------------------------------------------------------------
+    function initApp() {
+      // Date Picker init
+      const dateInput = document.getElementById("currentDateInput");
+      dateInput.value = appState.date;
+      dateInput.addEventListener("change", (e) => {
+        appState.date = e.target.value;
+        renderAll();
+      });
+
+      document.getElementById("prevDayBtn").addEventListener("click", () => shiftDate(-1));
+      document.getElementById("nextDayBtn").addEventListener("click", () => shiftDate(1));
+      document.getElementById("todayBtn").addEventListener("click", () => {
+        appState.date = new Date().toISOString().split("T")[0];
+        dateInput.value = appState.date;
+        renderAll();
+      });
+
+      // Active Player Persistence
+      const playerSelect = document.getElementById("activePlayerSelect");
+      playerSelect.value = appState.activePlayer;
+      playerSelect.addEventListener("change", (e) => {
+        appState.activePlayer = e.target.value;
+        localStorage.setItem("selected_player_id", appState.activePlayer);
+        renderEntryInputs();
+      });
+
+      setupTabs();
+      setupCommentForm();
+      setupConfigHandlers();
+
+      // Listen to Firebase Realtime Database
+      if (db) {
+        db.ref("scores").on("value", (snap) => {
+          appState.scores = snap.val() || {};
+          renderAll();
+        });
+        db.ref("comments").on("value", (snap) => {
+          appState.comments = snap.val() || {};
+          renderComments();
+        });
+        db.ref("config").on("value", (snap) => {
+          const val = snap.val();
+          if (val) appState.config = val;
+          updatePlayerSelectOptions();
+          renderConfigTab();
+          renderAll();
+        });
+      } else {
+        renderAll();
+      }
+    }
+
+    function shiftDate(deltaDays) {
+      const cur = new Date(appState.date + "T00:00:00");
+      cur.setDate(cur.getDate() + deltaDays);
+      appState.date = cur.toISOString().split("T")[0];
+      document.getElementById("currentDateInput").value = appState.date;
+      renderAll();
+    }
+
+    // -------------------------------------------------------------
+    // 4. RENDERING ROUTINES
+    // -------------------------------------------------------------
+    function renderAll() {
+      renderEntryInputs();
+      renderDailyTable();
+      renderWinnersBanner();
+      renderHistoryTable();
+      renderComments();
+    }
+
+    function renderEntryInputs() {
+      const container = document.getElementById("gameEntryInputs");
+      const pName = appState.config.players[appState.activePlayer]?.name || "Active Player";
+      document.getElementById("activePlayerNameLabel").innerText = pName;
+
+      const dayScores = appState.scores[appState.date]?.[appState.activePlayer] || {};
+
+      container.innerHTML = Object.entries(appState.config.games).map(([gKey, g]) => {
+        const val = dayScores[gKey] !== undefined ? dayScores[gKey] : "";
+        return `
+          <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
+            <label class="block text-xs font-semibold text-slate-300 mb-1">${g.name}</label>
+            <input type="number" id="input_${gKey}" value="${val}" min="${g.min}" max="${g.max}" step="${g.step}"
+                   placeholder="${g.direction === 'high' ? 'Highest wins' : 'Lowest wins'}"
+                   class="w-full bg-slate-950 border border-slate-700 text-amber-400 font-mono text-sm px-3 py-1.5 rounded-lg focus:outline-none focus:border-amber-400" />
+          </div>
+        `;
+      }).join("");
+
+      document.getElementById("saveScoresBtn").onclick = saveScoresForActivePlayer;
+    }
+
+    function saveScoresForActivePlayer() {
+      const pId = appState.activePlayer;
+      const updates = {};
+      Object.keys(appState.config.games).forEach(gKey => {
+        const input = document.getElementById(`input_${gKey}`);
+        if (input && input.value !== "") {
+          updates[gKey] = Number(input.value);
+        }
+      });
+
+      if (!appState.scores[appState.date]) {
+        appState.scores[appState.date] = {};
+      }
+      appState.scores[appState.date][pId] = updates;
+
+      if (db) {
+        db.ref(`scores/${appState.date}/${pId}`).set(updates);
+      }
+      renderAll();
+    }
+
+    function renderDailyTable() {
+      const tbody = document.getElementById("dailyTableBody");
+      const dateScores = appState.scores[appState.date] || {};
+
+      tbody.innerHTML = Object.entries(appState.config.players).map(([pId, p]) => {
+        const pScores = dateScores[pId] || {};
+        const isSelf = pId === appState.activePlayer;
+        return `
+          <tr class="${isSelf ? 'bg-amber-400/5' : ''}">
+            <td class="py-2.5 font-sans font-medium text-slate-200">${p.name} ${isSelf ? '<span class="text-[10px] text-amber-400">(You)</span>' : ''}</td>
+            <td class="py-2.5 ${pScores.krillion !== undefined ? 'text-amber-300 font-bold' : 'text-slate-600'}">${pScores.krillion ?? '-'}</td>
+            <td class="py-2.5 ${pScores.more_less !== undefined ? 'text-amber-300 font-bold' : 'text-slate-600'}">${pScores.more_less ?? '-'}</td>
+            <td class="py-2.5 ${pScores.clueless !== undefined ? 'text-amber-300 font-bold' : 'text-slate-600'}">${pScores.clueless ?? '-'}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderWinnersBanner() {
+      const container = document.getElementById("winnersBanner");
+      const dateScores = appState.scores[appState.date] || {};
+
+      container.innerHTML = Object.entries(appState.config.games).map(([gKey, g]) => {
+        let bestVal = null;
+        let winners = [];
+
+        Object.entries(appState.config.players).forEach(([pId, p]) => {
+          const val = dateScores[pId]?.[gKey];
+          if (val !== undefined && val !== null) {
+            if (bestVal === null) {
+              bestVal = val;
+              winners = [p.name];
+            } else if (g.direction === "high") {
+              if (val > bestVal) {
+                bestVal = val;
+                winners = [p.name];
+              } else if (val === bestVal) {
+                winners.push(p.name);
+              }
+            } else { // low
+              if (val < bestVal) {
+                bestVal = val;
+                winners = [p.name];
+              } else if (val === bestVal) {
+                winners.push(p.name);
+              }
+            }
+          }
+        });
+
+        const label = winners.length > 0 ? `${winners.join(", ")} (${bestVal})` : "No scores yet";
+        return `
+          <div class="glass border border-slate-800 rounded-xl p-3">
+            <span class="text-[10px] font-bold tracking-wider uppercase text-slate-400">${g.name} Winner</span>
+            <div class="text-sm font-bold text-amber-400 truncate mt-0.5">${label}</div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderHistoryTable() {
+      const tbody = document.getElementById("historyTableBody");
+      const dates = Object.keys(appState.scores).sort().reverse().slice(0, 30);
+
+      if (dates.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-xs text-slate-500">No recorded dates yet.</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = dates.map(d => {
+        const dScores = appState.scores[d] || {};
+        
+        function getWinner(gKey, dir) {
+          let bVal = null, w = [];
+          Object.entries(appState.config.players).forEach(([pId, p]) => {
+            const v = dScores[pId]?.[gKey];
+            if (v !== undefined) {
+              if (bVal === null || (dir === "high" ? v > bVal : v < bVal)) {
+                bVal = v; w = [p.name];
+              } else if (v === bVal) {
+                w.push(p.name);
+              }
+            }
+          });
+          return w.length ? `${w.join(", ")} (${bVal})` : "-";
+        }
+
+        return `
+          <tr class="hover:bg-slate-900/50 cursor-pointer" onclick="appState.date='${d}'; document.getElementById('currentDateInput').value='${d}'; renderAll();">
+            <td class="py-2.5 font-mono text-xs text-amber-400">${d}</td>
+            <td class="py-2.5 text-xs text-slate-300">${getWinner('krillion', 'high')}</td>
+            <td class="py-2.5 text-xs text-slate-300">${getWinner('more_less', 'high')}</td>
+            <td class="py-2.5 text-xs text-slate-300">${getWinner('clueless', 'low')}</td>
+          </tr>
+        `;
+      }).join("");
+    }
+
+    function renderComments() {
+      const list = document.getElementById("commentsList");
+      const dayComments = appState.comments[appState.date] || [];
+
+      if (!dayComments.length) {
+        list.innerHTML = `<p class="text-xs text-slate-500 italic">No notes left for this day yet.</p>`;
+        return;
+      }
+
+      list.innerHTML = dayComments.map(c => `
+        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 text-xs">
+          <div class="flex justify-between items-center mb-1">
+            <span class="font-bold text-amber-400">${c.player}</span>
+            <span class="text-[10px] text-slate-500 font-mono">${c.time}</span>
+          </div>
+          <p class="text-slate-200">${c.text}</p>
+        </div>
+      `).join("");
+      list.scrollTop = list.scrollHeight;
+    }
+
+    function setupCommentForm() {
+      document.getElementById("commentForm").addEventListener("submit", (e) => {
+        e.preventDefault();
+        const input = document.getElementById("commentInput");
+        const text = input.value.trim();
+        if (!text) return;
+
+        const newComment = {
+          player: appState.config.players[appState.activePlayer]?.name || "Anonymous",
+          text: text,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+        };
+
+        if (!appState.comments[appState.date]) appState.comments[appState.date] = [];
+        appState.comments[appState.date].push(newComment);
+
+        if (db) {
+          db.ref(`comments/${appState.date}`).set(appState.comments[appState.date]);
+        }
+        input.value = "";
+        renderComments();
+      });
+    }
+
+    function setupTabs() {
+      document.querySelectorAll(".tab-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          document.querySelectorAll(".tab-btn").forEach(b => {
+            b.classList.remove("border-amber-400", "text-amber-400", "font-bold");
+            b.classList.add("border-transparent", "text-slate-400");
+          });
+          btn.classList.add("border-amber-400", "text-amber-400", "font-bold");
+          btn.classList.remove("border-transparent", "text-slate-400");
+
+          ["scoresTab", "historyTab", "chatTab", "configTab"].forEach(id => {
+            document.getElementById(id).classList.add("hidden");
+          });
+          document.getElementById(btn.dataset.tab).classList.remove("hidden");
+        });
+      });
+    }
+
+    function updatePlayerSelectOptions() {
+      const select = document.getElementById("activePlayerSelect");
+      select.innerHTML = Object.entries(appState.config.players).map(([id, p]) => `
+        <option value="${id}">${p.name}</option>
+      `).join("");
+      select.value = appState.activePlayer;
+    }
+
+    function renderConfigTab() {
+      const container = document.getElementById("playerNamesConfig");
+      container.innerHTML = Object.entries(appState.config.players).map(([id, p]) => `
+        <div>
+          <label class="block text-xs text-slate-400 mb-1">${id.toUpperCase()}</label>
+          <input id="cfg_player_${id}" value="${p.name}" class="bg-slate-900 border border-slate-700 text-sm rounded-lg px-3 py-1.5 w-full text-white" />
+        </div>
+      `).join("");
+    }
+
+    function setupConfigHandlers() {
+      renderConfigTab();
+      document.getElementById("savePlayerNamesBtn").onclick = () => {
+        Object.keys(appState.config.players).forEach(id => {
+          const val = document.getElementById(`cfg_player_${id}`)?.value.trim();
+          if (val) appState.config.players[id].name = val;
+        });
+        if (db) {
+          db.ref("config/players").set(appState.config.players);
+        }
+        updatePlayerSelectOptions();
+        renderAll();
+        alert("Player names saved.");
+      };
+    }
+
+    // Run auth check on load
+    checkAuth();
+  </script>
+</body>
+</html>
