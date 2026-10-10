@@ -7,9 +7,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-  <!-- Add Firebase App Check SDK -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-check-compat.js"></script>
   <style>
     .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); }
   </style>
@@ -26,7 +25,7 @@
         <input id="passphraseInput" type="password" placeholder="Passphrase" autocomplete="off"
                class="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-700 text-center tracking-widest text-lg font-mono focus:outline-none focus:border-amber-400" />
         <p id="authError" class="text-xs text-rose-400 hidden">Incorrect passphrase. Try again.</p>
-        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition">
+        <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold py-3 rounded-xl transition cursor-pointer">
           Unlock App
         </button>
       </form>
@@ -176,7 +175,7 @@
 
   <script>
     // -------------------------------------------------------------
-    // LOCAL CALENDAR DATE HELPER (Avoids UTC cutoff shifts)
+    // LOCAL CALENDAR DATE HELPER
     // -------------------------------------------------------------
     function getLocalDateString(d = new Date()) {
       const year = d.getFullYear();
@@ -203,12 +202,6 @@
     let db = null;
     try {
       firebase.initializeApp(firebaseConfig);
-      // Initialize App Check with your reCAPTCHA v3 Site Key
-      const appCheck = firebase.appCheck();
-      appCheck.activate(
-        "6LeNIuktAAAAAFhkhITcxXtqUJ6wjsrHPn6ZScWU", // Replace with the Site Key from Step 1
-        true // isTokenAutoRefreshEnabled
-      );
       db = firebase.database();
     } catch (e) {
       console.error("Firebase init failed:", e);
@@ -253,6 +246,14 @@
       if (localStorage.getItem("league_unlocked") === PASSPHRASE) {
         authGate.classList.add("hidden");
         appContainer.classList.remove("hidden");
+
+        // Authenticate silently so Firebase Realtime Database rules authorize writes
+        if (firebase.auth && (!firebase.auth().currentUser)) {
+          firebase.auth().signInAnonymously().catch((err) => {
+            console.error("Anonymous auth error:", err);
+          });
+        }
+
         initApp();
       } else {
         authGate.classList.remove("hidden");
