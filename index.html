@@ -15,8 +15,11 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased pb-16">
 
+  <!-- FLOATING TOAST NOTIFICATION CONTAINER -->
+  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
   <!-- PASSPHRASE MODAL -->
-  <div id="authGate" class="fixed inset-0 bg-slate-950/95 flex items-center justify-center p-4 z-50">
+  <div id="authGate" class="fixed inset-0 bg-slate-950/95 flex items-center justify-center p-4 z-40">
     <div class="glass border border-slate-800 p-8 rounded-2xl max-w-sm w-full shadow-2xl text-center">
       <div class="text-4xl mb-3">🤡</div>
       <h2 class="text-xl font-bold tracking-tight mb-1 text-white">Daily League Passphrase</h2>
@@ -41,17 +44,14 @@
         <h1 class="text-2xl font-black tracking-tight text-white flex items-center gap-2">
           🏆 Daily League
         </h1>
-        <p class="text-xs text-slate-400">Krillion • More/Less • Clueless</p>
+        <p id="headerGamesSubtext" class="text-xs text-slate-400">Loading games...</p>
       </div>
 
-      <!-- Remembered Active Player Switcher -->
+      <!-- Active Player Switcher -->
       <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl">
         <span class="text-xs uppercase font-bold text-slate-400">You:</span>
         <select id="activePlayerSelect" class="bg-transparent text-sm font-semibold text-amber-400 focus:outline-none cursor-pointer">
-          <option value="p1">Player 1</option>
-          <option value="p2">Player 2</option>
-          <option value="p3">Player 3</option>
-          <option value="p4">Player 4</option>
+          <!-- Dynamically populated -->
         </select>
       </div>
     </header>
@@ -74,7 +74,7 @@
     <!-- TABS NAVIGATION -->
     <nav class="flex border-b border-slate-800 text-sm font-medium">
       <button data-tab="scoresTab" class="tab-btn px-4 py-2.5 border-b-2 border-amber-400 text-amber-400 font-bold">Daily Hub</button>
-      <button data-tab="historyTab" class="tab-btn px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-white">Scoreboard History</button>
+      <button data-tab="historyTab" class="tab-btn px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-white">Scoreboard & Analytics</button>
       <button data-tab="configTab" class="tab-btn px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-white">Settings</button>
     </nav>
 
@@ -90,7 +90,7 @@
         </div>
 
         <div id="gameEntryInputs" class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <!-- Populated via JS based on games list -->
+          <!-- Populated via JS -->
         </div>
 
         <div class="flex items-center gap-4 mt-5">
@@ -106,11 +106,8 @@
         <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Today's Group Standings</h3>
         <table class="w-full text-left text-sm" id="dailyTable">
           <thead>
-            <tr class="border-b border-slate-800 text-slate-400 text-xs">
-              <th class="py-2">Player</th>
-              <th class="py-2">Krillion <span class="text-[10px] text-slate-500">(High)</span></th>
-              <th class="py-2">More/Less <span class="text-[10px] text-slate-500">(/25)</span></th>
-              <th class="py-2">Clueless <span class="text-[10px] text-slate-500">(Low)</span></th>
+            <tr id="dailyTableHeader" class="border-b border-slate-800 text-slate-400 text-xs">
+              <!-- Injected via JS -->
             </tr>
           </thead>
           <tbody id="dailyTableBody" class="divide-y divide-slate-800 font-mono">
@@ -119,10 +116,10 @@
         </table>
       </div>
 
-      <!-- Daily Trash Talk & Banter (Directly below scores) -->
+      <!-- Daily Trash Talk & Banter (with inline editing) -->
       <div class="glass border border-slate-800 rounded-2xl p-5 space-y-4">
         <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Daily Trash Talk & Banter</h3>
-        <div id="commentsList" class="space-y-3 max-h-72 overflow-y-auto pr-2">
+        <div id="commentsList" class="space-y-3 max-h-80 overflow-y-auto pr-2">
           <p class="text-xs text-slate-500 italic">No notes left for this day yet.</p>
         </div>
         <form id="commentForm" class="flex gap-2 pt-2 border-t border-slate-800">
@@ -135,28 +132,46 @@
       </div>
     </section>
 
-    <!-- TAB 2: SCOREBOARD HISTORY -->
-    <section id="historyTab" class="hidden glass border border-slate-800 rounded-2xl p-5">
-      <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">Past 30 Days Summary</h3>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left text-sm" id="historyTable">
-          <thead>
-            <tr class="border-b border-slate-800 text-slate-400 text-xs">
-              <th class="py-2">Date</th>
-              <th class="py-2">Krillion Top</th>
-              <th class="py-2">More/Less Top</th>
-              <th class="py-2">Clueless Top</th>
-            </tr>
-          </thead>
-          <tbody id="historyTableBody" class="divide-y divide-slate-800">
-            <!-- Injected via JS -->
-          </tbody>
-        </table>
+    <!-- TAB 2: SCOREBOARD HISTORY & ANALYTICS -->
+    <section id="historyTab" class="hidden space-y-6">
+      <!-- All-Time Leaderboard & Averages Matrix -->
+      <div class="glass border border-slate-800 rounded-2xl p-5">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">🏆 All-Time Group Performance & Averages</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm" id="analyticsTable">
+            <thead>
+              <tr id="analyticsTableHeader" class="border-b border-slate-800 text-slate-400 text-xs">
+                <!-- Injected via JS -->
+              </tr>
+            </thead>
+            <tbody id="analyticsTableBody" class="divide-y divide-slate-800 font-mono">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Past Days Summary Log -->
+      <div class="glass border border-slate-800 rounded-2xl p-5">
+        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">📅 Daily Winners Log (Click row to inspect)</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm" id="historyTable">
+            <thead>
+              <tr id="historyTableHeader" class="border-b border-slate-800 text-slate-400 text-xs">
+                <!-- Injected via JS -->
+              </tr>
+            </thead>
+            <tbody id="historyTableBody" class="divide-y divide-slate-800">
+              <!-- Injected via JS -->
+            </tbody>
+          </table>
+        </div>
       </div>
     </section>
 
     <!-- TAB 3: SETTINGS -->
-    <section id="configTab" class="hidden glass border border-slate-800 rounded-2xl p-5 space-y-6">
+    <section id="configTab" class="hidden glass border border-slate-800 rounded-2xl p-5 space-y-8">
+      <!-- Player Names Settings (Available to all) -->
       <div>
         <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Player Names</h3>
         <div id="playerNamesConfig" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -167,6 +182,71 @@
             Save Names
           </button>
           <span id="playerSaveStatus" class="text-xs text-emerald-400 font-semibold hidden">✓ Names Updated</span>
+        </div>
+      </div>
+
+      <!-- Player 1 Custom Admin Interface -->
+      <div id="adminPanelSection" class="pt-6 border-t border-slate-800 space-y-6">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
+              👑 Admin Settings (Player 1 Exclusive)
+            </h3>
+            <p class="text-xs text-slate-400">Add or manage players and games tracked in this league.</p>
+          </div>
+          <span class="text-[10px] bg-amber-400/10 text-amber-300 font-mono px-2 py-0.5 rounded border border-amber-400/20">ADMIN ACTIVE</span>
+        </div>
+
+        <!-- Add Player Form -->
+        <form id="addPlayerForm" class="bg-slate-900/70 border border-slate-800 rounded-xl p-4 space-y-3">
+          <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wide">Add New Player</h4>
+          <div class="flex gap-2">
+            <input id="newPlayerName" type="text" placeholder="e.g. Charlie" required
+                   class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400" />
+            <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-1.5 rounded-lg transition cursor-pointer">
+              + Add Player
+            </button>
+          </div>
+        </form>
+
+        <!-- Add Game Form -->
+        <form id="addGameForm" class="bg-slate-900/70 border border-slate-800 rounded-xl p-4 space-y-4">
+          <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wide">Add New Game</h4>
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
+            <div>
+              <label class="block text-slate-400 mb-1">Game Name</label>
+              <input id="newGameName" type="text" placeholder="e.g. Wordle" required
+                     class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-amber-400" />
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">Win Condition</label>
+              <select id="newGameDirection" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-amber-400 focus:outline-none">
+                <option value="high">Highest Score Wins</option>
+                <option value="low">Lowest Score Wins (e.g. Guesses)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">Min Value</label>
+              <input id="newGameMin" type="number" value="0"
+                     class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-amber-400 font-mono" />
+            </div>
+            <div>
+              <label class="block text-slate-400 mb-1">Max Value</label>
+              <input id="newGameMax" type="number" value="1000"
+                     class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-amber-400 font-mono" />
+            </div>
+          </div>
+          <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-2 rounded-lg transition cursor-pointer">
+            + Add Game to League
+          </button>
+        </form>
+
+        <!-- Current Games List -->
+        <div>
+          <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wide mb-2">Configured Games</h4>
+          <div id="gamesConfigList" class="space-y-2">
+            <!-- Generated via JS -->
+          </div>
         </div>
       </div>
     </section>
@@ -182,6 +262,32 @@
       const month = String(d.getMonth() + 1).padStart(2, '0');
       const day = String(d.getDate()).padStart(2, '0');
       return `${year}-${month}-${day}`;
+    }
+
+    // -------------------------------------------------------------
+    // TOAST NOTIFICATION UTILITY
+    // -------------------------------------------------------------
+    function showToast(message, type = 'info') {
+      message = "Text Xavier If You See This! -- " + message;
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      
+      const bgColors = {
+        success: 'bg-emerald-500/90 border-emerald-400 text-slate-950 font-semibold',
+        error: 'bg-rose-500/95 border-rose-400 text-white font-semibold',
+        info: 'bg-slate-800/90 border-slate-700 text-slate-100 font-medium'
+      };
+
+      toast.className = `px-4 py-3 rounded-xl border shadow-2xl text-xs backdrop-blur-md transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto flex items-center gap-2 max-w-sm ${bgColors[type] || bgColors.info}`;
+      const icon = type === 'success' ? '✓' : type === 'error' ? '⚠️' : 'ℹ️';
+      toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
+      setTimeout(() => {
+        toast.classList.add('opacity-0', '-translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 4000);
     }
 
     // -------------------------------------------------------------
@@ -229,8 +335,23 @@
       config: JSON.parse(JSON.stringify(DEFAULT_CONFIG))
     };
 
+    function getPlayerIds() {
+      return Object.keys(appState.config.players).sort((a, b) => {
+        const numA = parseInt(a.replace(/\D/g, '')) || 0;
+        const numB = parseInt(b.replace(/\D/g, '')) || 0;
+        return numA - numB;
+      });
+    }
+
     function getPlayerName(pId) {
       return appState.config.players[pId]?.name || `Player ${pId.replace('p', '')}`;
+    }
+
+    async function ensureAuthenticated() {
+      if (!firebase.auth) return;
+      if (!firebase.auth().currentUser) {
+        await firebase.auth().signInAnonymously();
+      }
     }
 
     // -------------------------------------------------------------
@@ -247,13 +368,13 @@
         authGate.classList.add("hidden");
         appContainer.classList.remove("hidden");
 
-        // Authenticate silently so Firebase Realtime Database rules authorize writes
-        if (firebase.auth && (!firebase.auth().currentUser)) {
-          firebase.auth().signInAnonymously().catch((err) => {
-            console.error("Anonymous auth error:", err);
+        if (firebase.auth) {
+          firebase.auth().onAuthStateChanged((user) => {
+            if (!user) {
+              firebase.auth().signInAnonymously().catch(err => console.error("Auto sign-in error:", err));
+            }
           });
         }
-
         initApp();
       } else {
         authGate.classList.remove("hidden");
@@ -298,12 +419,13 @@
       });
 
       const playerSelect = document.getElementById("activePlayerSelect");
-      playerSelect.value = appState.activePlayer;
       playerSelect.addEventListener("change", (e) => {
         appState.activePlayer = e.target.value;
         localStorage.setItem("selected_player_id", appState.activePlayer);
+        updateAdminVisibility();
         renderEntryInputs();
         renderDailyTable();
+        renderComments();
       });
 
       document.getElementById("saveScoresBtn").addEventListener("click", saveScoresForActivePlayer);
@@ -311,6 +433,10 @@
       setupTabs();
       setupCommentForm();
       setupConfigHandlers();
+      setupAdminGameHandler();
+      setupAdminPlayerHandler();
+      updatePlayerSelectOptions();
+      updateAdminVisibility();
 
       if (db) {
         db.ref("scores").on("value", (snap) => {
@@ -326,12 +452,17 @@
         db.ref("config/players").on("value", (snap) => {
           const remotePlayers = snap.val();
           if (remotePlayers) {
-            Object.keys(DEFAULT_CONFIG.players).forEach(pId => {
-              if (remotePlayers[pId]) {
-                appState.config.players[pId] = remotePlayers[pId];
-              }
-            });
+            appState.config.players = remotePlayers;
             updatePlayerSelectOptions();
+            renderConfigTab();
+            renderAll();
+          }
+        });
+
+        db.ref("config/games").on("value", (snap) => {
+          const remoteGames = snap.val();
+          if (remoteGames) {
+            appState.config.games = remoteGames;
             renderConfigTab();
             renderAll();
           }
@@ -350,29 +481,47 @@
       renderAll();
     }
 
+    function updateAdminVisibility() {
+      const panel = document.getElementById("adminPanelSection");
+      if (appState.activePlayer === "p1") {
+        panel.classList.remove("hidden");
+      } else {
+        panel.classList.add("hidden");
+      }
+    }
+
     // -------------------------------------------------------------
     // 4. RENDERING ROUTINES
     // -------------------------------------------------------------
     function renderAll() {
+      renderHeaderSubtext();
       renderEntryInputs();
       renderDailyTable();
       renderWinnersBanner();
+      renderAnalyticsTable();
       renderHistoryTable();
       renderComments();
+    }
+
+    function renderHeaderSubtext() {
+      const gNames = Object.values(appState.config.games).map(g => g.name);
+      document.getElementById("headerGamesSubtext").innerText = gNames.join(" • ") || "No games registered";
     }
 
     function renderEntryInputs() {
       const container = document.getElementById("gameEntryInputs");
       document.getElementById("activePlayerNameLabel").innerText = getPlayerName(appState.activePlayer);
-
       const dayScores = appState.scores[appState.date]?.[appState.activePlayer] || {};
 
       container.innerHTML = Object.entries(appState.config.games).map(([gKey, g]) => {
         const val = (dayScores[gKey] !== undefined && dayScores[gKey] !== null) ? dayScores[gKey] : "";
         return `
           <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
-            <label class="block text-xs font-semibold text-slate-300 mb-1">${g.name}</label>
-            <input type="number" id="input_${gKey}" value="${val}" min="${g.min}" max="${g.max}" step="${g.step}"
+            <div class="flex items-center justify-between mb-1">
+              <label class="text-xs font-semibold text-slate-300 truncate">${g.name}</label>
+              <span class="text-[10px] text-slate-500 font-mono">${g.direction === 'high' ? 'High' : 'Low'}</span>
+            </div>
+            <input type="number" id="input_${gKey}" value="${val}" min="${g.min ?? 0}" max="${g.max ?? 9999}" step="${g.step ?? 1}"
                    placeholder="${g.direction === 'high' ? 'Highest wins' : 'Lowest wins'}"
                    class="w-full bg-slate-950 border border-slate-700 text-amber-400 font-mono text-sm px-3 py-1.5 rounded-lg focus:outline-none focus:border-amber-400" />
           </div>
@@ -380,7 +529,7 @@
       }).join("");
     }
 
-    function saveScoresForActivePlayer() {
+    async function saveScoresForActivePlayer() {
       const pId = appState.activePlayer;
       const updates = {};
       let hasAnyValue = false;
@@ -397,36 +546,36 @@
       });
 
       if (!hasAnyValue) {
-        alert("Please enter at least one score before saving.");
+        showToast("Enter at least one score before saving.", "info");
         return;
       }
 
-      if (!appState.scores[appState.date]) {
-        appState.scores[appState.date] = {};
-      }
-      if (!appState.scores[appState.date][pId]) {
-        appState.scores[appState.date][pId] = {};
-      }
+      if (!appState.scores[appState.date]) appState.scores[appState.date] = {};
+      if (!appState.scores[appState.date][pId]) appState.scores[appState.date][pId] = {};
       Object.assign(appState.scores[appState.date][pId], updates);
 
       if (db) {
-        const promises = Object.entries(updates).map(([gKey, val]) => {
-          return db.ref(`scores/${appState.date}/${pId}/${gKey}`).set(val);
-        });
-
-        Promise.all(promises)
-          .then(() => showSaveFeedback("✓ Saved to cloud"))
-          .catch((err) => {
-            console.error("Firebase score write error:", err);
-            showSaveFeedback("⚠️ Error writing to Firebase", true);
-            alert("Database write error: " + err.message);
+        try {
+          await ensureAuthenticated();
+          const promises = Object.entries(updates).map(([gKey, val]) => {
+            return db.ref(`scores/${appState.date}/${pId}/${gKey}`).set(val);
           });
+          await Promise.all(promises);
+          showSaveFeedback("✓ Saved to cloud");
+          showToast("Scores saved successfully to cloud!", "success");
+        } catch (err) {
+          console.error("Firebase score write error:", err);
+          showSaveFeedback("⚠️ Error writing to Firebase", true);
+          showToast(`Save failed: ${err.message}`, "error");
+        }
       } else {
         showSaveFeedback("✓ Saved locally");
+        showToast("Scores saved locally.", "info");
       }
 
       renderDailyTable();
       renderWinnersBanner();
+      renderAnalyticsTable();
       renderHistoryTable();
     }
 
@@ -434,34 +583,37 @@
       const el = document.getElementById("saveStatus");
       el.innerText = msg;
       el.className = `text-xs font-semibold ${isError ? 'text-rose-400' : 'text-emerald-400'} block`;
-      setTimeout(() => {
-        el.className = "text-xs font-semibold text-emerald-400 hidden";
-      }, 3000);
+      setTimeout(() => el.className = "text-xs font-semibold text-emerald-400 hidden", 3000);
     }
 
     function renderDailyTable() {
+      const header = document.getElementById("dailyTableHeader");
       const tbody = document.getElementById("dailyTableBody");
       const dateScores = appState.scores[appState.date] || {};
+      const games = Object.entries(appState.config.games);
+      const playerIds = getPlayerIds();
 
-      tbody.innerHTML = ["p1", "p2", "p3", "p4"].map(pId => {
+      header.innerHTML = `
+        <th class="py-2.5">Player</th>
+        ${games.map(([_, g]) => `<th class="py-2.5">${g.name} <span class="text-[10px] text-slate-500 font-normal">(${g.direction === 'high' ? 'High' : 'Low'})</span></th>`).join("")}
+      `;
+
+      tbody.innerHTML = playerIds.map(pId => {
         const pScores = dateScores[pId] || {};
         const isSelf = pId === appState.activePlayer;
         const displayName = getPlayerName(pId);
+
+        const scoreCells = games.map(([gKey, _]) => {
+          const val = pScores[gKey];
+          return `<td class="py-2.5 ${val !== undefined ? 'text-amber-300 font-bold' : 'text-slate-600'}">${val !== undefined ? val : '-'}</td>`;
+        }).join("");
 
         return `
           <tr class="${isSelf ? 'bg-amber-400/5' : ''}">
             <td class="py-2.5 font-sans font-medium text-slate-200">
               ${displayName} ${isSelf ? '<span class="text-[10px] text-amber-400 font-bold ml-1">(You)</span>' : ''}
             </td>
-            <td class="py-2.5 ${pScores.krillion !== undefined ? 'text-amber-300 font-bold' : 'text-slate-600'}">
-              ${pScores.krillion !== undefined ? pScores.krillion : '-'}
-            </td>
-            <td class="py-2.5 ${pScores.more_less !== undefined ? 'text-amber-300 font-bold' : 'text-slate-600'}">
-              ${pScores.more_less !== undefined ? pScores.more_less : '-'}
-            </td>
-            <td class="py-2.5 ${pScores.clueless !== undefined ? 'text-amber-300 font-bold' : 'text-slate-600'}">
-              ${pScores.clueless !== undefined ? pScores.clueless : '-'}
-            </td>
+            ${scoreCells}
           </tr>
         `;
       }).join("");
@@ -470,12 +622,13 @@
     function renderWinnersBanner() {
       const container = document.getElementById("winnersBanner");
       const dateScores = appState.scores[appState.date] || {};
+      const playerIds = getPlayerIds();
 
       container.innerHTML = Object.entries(appState.config.games).map(([gKey, g]) => {
         let bestVal = null;
         let winners = [];
 
-        ["p1", "p2", "p3", "p4"].forEach(pId => {
+        playerIds.forEach(pId => {
           const val = dateScores[pId]?.[gKey];
           if (val !== undefined && val !== null) {
             const name = getPlayerName(pId);
@@ -489,7 +642,7 @@
               } else if (val === bestVal) {
                 winners.push(name);
               }
-            } else { // low
+            } else {
               if (val < bestVal) {
                 bestVal = val;
                 winners = [name];
@@ -503,52 +656,152 @@
         const label = winners.length > 0 ? `${winners.join(", ")} (${bestVal})` : "No scores yet";
         return `
           <div class="glass border border-slate-800 rounded-xl p-3">
-            <span class="text-[10px] font-bold tracking-wider uppercase text-slate-400">${g.name} Winner</span>
+            <span class="text-[10px] font-bold tracking-wider uppercase text-slate-400">${g.name} Daily Top</span>
             <div class="text-sm font-bold text-amber-400 truncate mt-0.5">${label}</div>
           </div>
         `;
       }).join("");
     }
 
+    // -------------------------------------------------------------
+    // ALL-TIME ANALYTICS MATRIX
+    // -------------------------------------------------------------
+    function renderAnalyticsTable() {
+      const header = document.getElementById("analyticsTableHeader");
+      const tbody = document.getElementById("analyticsTableBody");
+      const games = Object.entries(appState.config.games);
+      const dates = Object.keys(appState.scores);
+      const playerIds = getPlayerIds();
+
+      header.innerHTML = `
+        <th class="py-2.5">Player</th>
+        <th class="py-2.5 text-amber-400">Total Wins 🥇</th>
+        ${games.map(([_, g]) => `<th class="py-2.5">${g.name} Avg</th>`).join("")}
+      `;
+
+      const playerStats = {};
+      playerIds.forEach(pId => {
+        playerStats[pId] = { totalWins: 0, gameWins: {}, sums: {}, counts: {} };
+        games.forEach(([gKey, _]) => {
+          playerStats[pId].gameWins[gKey] = 0;
+          playerStats[pId].sums[gKey] = 0;
+          playerStats[pId].counts[gKey] = 0;
+        });
+      });
+
+      dates.forEach(d => {
+        const dScores = appState.scores[d] || {};
+        games.forEach(([gKey, g]) => {
+          let bVal = null;
+          let dayWinners = [];
+
+          playerIds.forEach(pId => {
+            const v = dScores[pId]?.[gKey];
+            if (v !== undefined && v !== null) {
+              playerStats[pId].sums[gKey] += v;
+              playerStats[pId].counts[gKey] += 1;
+
+              if (bVal === null) {
+                bVal = v;
+                dayWinners = [pId];
+              } else if (g.direction === "high") {
+                if (v > bVal) {
+                  bVal = v;
+                  dayWinners = [pId];
+                } else if (v === bVal) {
+                  dayWinners.push(pId);
+                }
+              } else {
+                if (v < bVal) {
+                  bVal = v;
+                  dayWinners = [pId];
+                } else if (v === bVal) {
+                  dayWinners.push(pId);
+                }
+              }
+            }
+          });
+
+          dayWinners.forEach(wId => {
+            if (playerStats[wId]) {
+              playerStats[wId].totalWins += 1;
+              playerStats[wId].gameWins[gKey] += 1;
+            }
+          });
+        });
+      });
+
+      tbody.innerHTML = playerIds.map(pId => {
+        const s = playerStats[pId];
+        const isSelf = pId === appState.activePlayer;
+
+        const avgCells = games.map(([gKey, _]) => {
+          if (!s || s.counts[gKey] === 0) return `<td class="py-2.5 text-slate-600">-</td>`;
+          const avg = (s.sums[gKey] / s.counts[gKey]).toFixed(1);
+          return `<td class="py-2.5 text-slate-300 font-mono">${avg} <span class="text-[10px] text-slate-500">(${s.gameWins[gKey]}W)</span></td>`;
+        }).join("");
+
+        return `
+          <tr class="${isSelf ? 'bg-amber-400/5' : ''}">
+            <td class="py-2.5 font-sans font-medium text-slate-200">
+              ${getPlayerName(pId)} ${isSelf ? '<span class="text-[10px] text-amber-400 font-bold ml-1">(You)</span>' : ''}
+            </td>
+            <td class="py-2.5 text-amber-400 font-bold text-sm">${s ? s.totalWins : 0} wins</td>
+            ${avgCells}
+          </tr>
+        `;
+      }).join("");
+    }
+
     function renderHistoryTable() {
+      const header = document.getElementById("historyTableHeader");
       const tbody = document.getElementById("historyTableBody");
+      const games = Object.entries(appState.config.games);
       const dates = Object.keys(appState.scores).sort().reverse().slice(0, 30);
+      const playerIds = getPlayerIds();
+
+      header.innerHTML = `
+        <th class="py-2">Date</th>
+        ${games.map(([_, g]) => `<th class="py-2">${g.name}</th>`).join("")}
+      `;
 
       if (dates.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="4" class="py-4 text-center text-xs text-slate-500">No recorded dates yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${games.length + 1}" class="py-4 text-center text-xs text-slate-500">No recorded dates yet.</td></tr>`;
         return;
       }
 
       tbody.innerHTML = dates.map(d => {
         const dScores = appState.scores[d] || {};
         
-        function getWinner(gKey, dir) {
-          let bVal = null, w = [];
-          ["p1", "p2", "p3", "p4"].forEach(pId => {
+        const winnerCells = games.map(([gKey, g]) => {
+          let bVal = null;
+          let w = [];
+          playerIds.forEach(pId => {
             const v = dScores[pId]?.[gKey];
             if (v !== undefined && v !== null) {
               const name = getPlayerName(pId);
-              if (bVal === null || (dir === "high" ? v > bVal : v < bVal)) {
+              if (bVal === null || (g.direction === "high" ? v > bVal : v < bVal)) {
                 bVal = v; w = [name];
               } else if (v === bVal) {
                 w.push(name);
               }
             }
           });
-          return w.length ? `${w.join(", ")} (${bVal})` : "-";
-        }
+          return `<td class="py-2.5 text-xs text-slate-300">${w.length ? `${w.join(", ")} (${bVal})` : '-'}</td>`;
+        }).join("");
 
         return `
           <tr class="hover:bg-slate-900/50 cursor-pointer" onclick="appState.date='${d}'; document.getElementById('currentDateInput').value='${d}'; renderAll();">
-            <td class="py-2.5 font-mono text-xs text-amber-400">${d}</td>
-            <td class="py-2.5 text-xs text-slate-300">${getWinner('krillion', 'high')}</td>
-            <td class="py-2.5 text-xs text-slate-300">${getWinner('more_less', 'high')}</td>
-            <td class="py-2.5 text-xs text-slate-300">${getWinner('clueless', 'low')}</td>
+            <td class="py-2.5 font-mono text-xs text-amber-400 font-semibold">${d}</td>
+            ${winnerCells}
           </tr>
         `;
       }).join("");
     }
 
+    // -------------------------------------------------------------
+    // COMMENTS & INLINE EDITING
+    // -------------------------------------------------------------
     function renderComments() {
       const list = document.getElementById("commentsList");
       const dayComments = appState.comments[appState.date] || [];
@@ -558,39 +811,181 @@
         return;
       }
 
-      list.innerHTML = dayComments.map(c => `
-        <div class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 text-xs">
-          <div class="flex justify-between items-center mb-1">
-            <span class="font-bold text-amber-400">${c.player}</span>
-            <span class="text-[10px] text-slate-500 font-mono">${c.time}</span>
+      list.innerHTML = dayComments.map((c, idx) => {
+        const isOwner = c.authorId === appState.activePlayer;
+        return `
+          <div id="commentBox_${idx}" class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 text-xs">
+            <div class="flex justify-between items-center mb-1">
+              <div class="flex items-center gap-2">
+                <span class="font-bold text-amber-400">${c.player}</span>
+                ${c.edited ? '<span class="text-[9px] text-slate-500 italic">(edited)</span>' : ''}
+              </div>
+              <div class="flex items-center gap-2">
+                <span class="text-[10px] text-slate-500 font-mono">${c.time}</span>
+                ${isOwner ? `<button onclick="startEditComment(${idx})" class="text-[10px] text-slate-400 hover:text-amber-400 cursor-pointer">Edit</button>` : ''}
+              </div>
+            </div>
+            <div id="commentText_${idx}" class="text-slate-200">${escapeHtml(c.text)}</div>
           </div>
-          <p class="text-slate-200">${c.text}</p>
-        </div>
-      `).join("");
+        `;
+      }).join("");
       list.scrollTop = list.scrollHeight;
     }
 
+    function escapeHtml(str) {
+      return (str || '').replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    }
+
+    window.startEditComment = function(idx) {
+      const box = document.getElementById(`commentText_${idx}`);
+      const curText = appState.comments[appState.date][idx].text;
+      box.innerHTML = `
+        <div class="mt-2 space-y-2">
+          <input id="editCommentInput_${idx}" type="text" value="${escapeHtml(curText)}" 
+                 class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400" />
+          <div class="flex gap-2">
+            <button onclick="saveEditComment(${idx})" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1 rounded text-[10px] cursor-pointer">Save</button>
+            <button onclick="renderComments()" class="bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1 rounded text-[10px] cursor-pointer">Cancel</button>
+          </div>
+        </div>
+      `;
+    };
+
+    window.saveEditComment = async function(idx) {
+      const input = document.getElementById(`editCommentInput_${idx}`);
+      const newText = input.value.trim();
+      if (!newText) return;
+
+      appState.comments[appState.date][idx].text = newText;
+      appState.comments[appState.date][idx].edited = true;
+
+      if (db) {
+        try {
+          await ensureAuthenticated();
+          await db.ref(`comments/${appState.date}`).set(appState.comments[appState.date]);
+          showToast("Comment updated!", "success");
+        } catch (err) {
+          showToast(`Error updating comment: ${err.message}`, "error");
+        }
+      }
+      renderComments();
+    };
+
     function setupCommentForm() {
-      document.getElementById("commentForm").addEventListener("submit", (e) => {
+      document.getElementById("commentForm").addEventListener("submit", async (e) => {
         e.preventDefault();
         const input = document.getElementById("commentInput");
         const text = input.value.trim();
         if (!text) return;
 
         const newComment = {
+          authorId: appState.activePlayer,
           player: getPlayerName(appState.activePlayer),
           text: text,
-          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          edited: false
         };
 
         if (!appState.comments[appState.date]) appState.comments[appState.date] = [];
         appState.comments[appState.date].push(newComment);
 
         if (db) {
-          db.ref(`comments/${appState.date}`).set(appState.comments[appState.date]);
+          try {
+            await ensureAuthenticated();
+            await db.ref(`comments/${appState.date}`).set(appState.comments[appState.date]);
+            showToast("Banter posted!", "success");
+          } catch (err) {
+            console.error("Comment post error:", err);
+            showToast(`Failed to post note: ${err.message}`, "error");
+          }
         }
         input.value = "";
         renderComments();
+      });
+    }
+
+    // -------------------------------------------------------------
+    // PLAYER 1 CUSTOM ADMIN ROUTINES (PLAYERS & GAMES)
+    // -------------------------------------------------------------
+    function setupAdminPlayerHandler() {
+      const form = document.getElementById("addPlayerForm");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (appState.activePlayer !== "p1") {
+          showToast("Only Player 1 can add players.", "error");
+          return;
+        }
+
+        const name = document.getElementById("newPlayerName").value.trim();
+        if (!name) return;
+
+        // Find next numeric player key (e.g. p5, p6)
+        const existingIds = getPlayerIds();
+        let maxNum = 0;
+        existingIds.forEach(id => {
+          const num = parseInt(id.replace(/\D/g, '')) || 0;
+          if (num > maxNum) maxNum = num;
+        });
+        const newPId = `p${maxNum + 1}`;
+
+        appState.config.players[newPId] = { name };
+
+        if (db) {
+          try {
+            await ensureAuthenticated();
+            await db.ref(`config/players/${newPId}`).set({ name });
+            showToast(`Player "${name}" added as ${newPId.toUpperCase()}!`, "success");
+          } catch (err) {
+            showToast(`Failed to add player: ${err.message}`, "error");
+          }
+        }
+
+        document.getElementById("newPlayerName").value = "";
+        updatePlayerSelectOptions();
+        renderConfigTab();
+        renderAll();
+      });
+    }
+
+    function setupAdminGameHandler() {
+      const form = document.getElementById("addGameForm");
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        if (appState.activePlayer !== "p1") {
+          showToast("Only Player 1 can add new games.", "error");
+          return;
+        }
+
+        const name = document.getElementById("newGameName").value.trim();
+        const direction = document.getElementById("newGameDirection").value;
+        const min = Number(document.getElementById("newGameMin").value) || 0;
+        const max = Number(document.getElementById("newGameMax").value) || 1000;
+
+        if (!name) return;
+
+        const gKey = name.toLowerCase().replace(/[^a-z0-9]/g, "_").slice(0, 16) || `game_${Date.now()}`;
+
+        if (appState.config.games[gKey]) {
+          showToast("A game with a similar name already exists.", "info");
+          return;
+        }
+
+        const newGameObj = { name, direction, min, max, step: 1 };
+        appState.config.games[gKey] = newGameObj;
+
+        if (db) {
+          try {
+            await ensureAuthenticated();
+            await db.ref(`config/games/${gKey}`).set(newGameObj);
+            showToast(`Game "${name}" added to league!`, "success");
+          } catch (err) {
+            showToast(`Failed to save game: ${err.message}`, "error");
+          }
+        }
+
+        document.getElementById("newGameName").value = "";
+        renderConfigTab();
+        renderAll();
       });
     }
 
@@ -614,27 +1009,44 @@
 
     function updatePlayerSelectOptions() {
       const select = document.getElementById("activePlayerSelect");
-      select.innerHTML = ["p1", "p2", "p3", "p4"].map(id => `
+      const playerIds = getPlayerIds();
+      select.innerHTML = playerIds.map(id => `
         <option value="${id}">${getPlayerName(id)}</option>
       `).join("");
       select.value = appState.activePlayer;
     }
 
     function renderConfigTab() {
+      const playerIds = getPlayerIds();
+
+      // 1. Player Names Section
       const container = document.getElementById("playerNamesConfig");
-      container.innerHTML = ["p1", "p2", "p3", "p4"].map(id => `
+      container.innerHTML = playerIds.map(id => `
         <div>
           <label class="block text-xs text-slate-400 mb-1">${id.toUpperCase()}</label>
           <input id="cfg_player_${id}" value="${getPlayerName(id)}" class="bg-slate-900 border border-slate-700 text-sm rounded-lg px-3 py-1.5 w-full text-white focus:outline-none focus:border-amber-400" />
+        </div>
+      `).join("");
+
+      // 2. Games List Section (Admin view)
+      const gamesContainer = document.getElementById("gamesConfigList");
+      gamesContainer.innerHTML = Object.entries(appState.config.games).map(([key, g]) => `
+        <div class="flex items-center justify-between p-3 bg-slate-900/50 border border-slate-800 rounded-lg text-xs">
+          <div>
+            <span class="font-bold text-white">${g.name}</span>
+            <span class="text-slate-400 ml-2">(${g.direction === 'high' ? 'Highest wins' : 'Lowest wins'} • ${g.min} to ${g.max})</span>
+          </div>
+          <span class="text-[10px] text-slate-500 font-mono">${key}</span>
         </div>
       `).join("");
     }
 
     function setupConfigHandlers() {
       renderConfigTab();
-      document.getElementById("savePlayerNamesBtn").onclick = () => {
+      document.getElementById("savePlayerNamesBtn").onclick = async () => {
         const payload = {};
-        ["p1", "p2", "p3", "p4"].forEach(id => {
+        const playerIds = getPlayerIds();
+        playerIds.forEach(id => {
           const val = document.getElementById(`cfg_player_${id}`)?.value.trim();
           if (val) {
             payload[id] = { name: val };
@@ -643,13 +1055,16 @@
         });
 
         if (db) {
-          db.ref("config/players").set(payload).then(() => {
+          try {
+            await ensureAuthenticated();
+            await db.ref("config/players").set(payload);
             const status = document.getElementById("playerSaveStatus");
             status.classList.remove("hidden");
             setTimeout(() => status.classList.add("hidden"), 3000);
-          }).catch(err => {
-            alert("Failed to save names: " + err.message);
-          });
+            showToast("Player names saved!", "success");
+          } catch (err) {
+            showToast(`Failed to save names: ${err.message}`, "error");
+          }
         }
 
         updatePlayerSelectOptions();
