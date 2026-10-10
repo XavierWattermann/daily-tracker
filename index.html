@@ -8,6 +8,8 @@
   <!-- Firebase SDKs -->
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <!-- Add Firebase App Check SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-check-compat.js"></script>
   <style>
     .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); }
   </style>
@@ -201,6 +203,12 @@
     let db = null;
     try {
       firebase.initializeApp(firebaseConfig);
+      // Initialize App Check with your reCAPTCHA v3 Site Key
+      const appCheck = firebase.appCheck();
+      appCheck.activate(
+        "6LeNIuktAAAAAFhkhITcxXtqUJ6wjsrHPn6ZScWU", // Replace with the Site Key from Step 1
+        true // isTokenAutoRefreshEnabled
+      );
       db = firebase.database();
     } catch (e) {
       console.error("Firebase init failed:", e);
