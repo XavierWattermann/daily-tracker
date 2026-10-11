@@ -271,6 +271,10 @@
       message = "Text Xavier If You See This! -- " + message;
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
+
+      if (type === 'error') {
+        message = "Text Xavier if you see this! -- " + message;
+      }
       
       const bgColors = {
         success: 'bg-emerald-500/90 border-emerald-400 text-slate-950 font-semibold',
