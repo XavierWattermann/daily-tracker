@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Daily Game League</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Firebase SDKs -->
@@ -13,10 +13,16 @@
     .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); }
   </style>
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased pb-16">
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased pb-20">
 
-  <!-- FLOATING TOAST NOTIFICATION CONTAINER -->
-  <div id="toastContainer" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+  <!-- MOBILE-OPTIMIZED TOAST CONTAINER -->
+  <div id="toastContainer" class="fixed bottom-6 inset-x-0 sm:bottom-auto sm:top-5 sm:right-5 sm:left-auto sm:inset-x-auto z-50 flex flex-col items-center sm:items-end gap-2 px-4 pointer-events-none pb-[env(safe-area-inset-bottom)]"></div>
+
+  <!-- FULLSCREEN IMAGE LIGHTBOX MODAL -->
+  <div id="imageLightbox" class="fixed inset-0 bg-black/90 hidden z-50 flex items-center justify-center p-4 backdrop-blur-md cursor-pointer select-none">
+    <button id="closeLightboxBtn" class="absolute top-5 right-5 text-white bg-slate-800/80 hover:bg-slate-700 p-2.5 rounded-full text-sm font-bold">✕</button>
+    <img id="lightboxImg" src="" alt="Enlarged Banter Photo" class="max-w-full max-h-[90vh] object-contain rounded-xl shadow-2xl" />
+  </div>
 
   <!-- PASSPHRASE MODAL -->
   <div id="authGate" class="fixed inset-0 bg-slate-950/95 flex items-center justify-center p-4 z-40">
@@ -36,8 +42,17 @@
   </div>
 
   <!-- MAIN APP CONTAINER -->
-  <div id="appContainer" class="hidden max-w-4xl mx-auto px-4 pt-6 space-y-6">
+  <div id="appContainer" class="hidden max-w-4xl mx-auto px-4 pt-4 space-y-5">
     
+    <!-- ADMIN ANNOUNCEMENT BANNER (Conditionally rendered) -->
+    <div id="adminBanner" class="hidden glass border border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent rounded-2xl p-4 text-amber-200 text-xs sm:text-sm flex items-start gap-3 shadow-lg">
+      <span class="text-lg shrink-0">📢</span>
+      <div class="flex-1 leading-relaxed">
+        <span class="font-bold text-amber-400 uppercase tracking-wider text-[10px] block mb-0.5">League Notice</span>
+        <span id="adminBannerText"></span>
+      </div>
+    </div>
+
     <!-- HEADER & ACTIVE PLAYER SELECTOR -->
     <header class="glass border border-slate-800 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
       <div>
@@ -47,21 +62,24 @@
         <p id="headerGamesSubtext" class="text-xs text-slate-400">Loading games...</p>
       </div>
 
-      <!-- Active Player Switcher -->
-      <div class="flex items-center gap-2 bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl">
-        <span class="text-xs uppercase font-bold text-slate-400">You:</span>
-        <select id="activePlayerSelect" class="bg-transparent text-sm font-semibold text-amber-400 focus:outline-none cursor-pointer">
-          <!-- Dynamically populated -->
-        </select>
+      <!-- Active Player Switcher with Live Avatar -->
+      <div class="flex items-center gap-2.5 bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl">
+        <img id="headerAvatarImg" src="" alt="Avatar" class="w-7 h-7 rounded-full object-cover border border-amber-400/50 bg-slate-800 shrink-0" />
+        <div class="flex flex-col">
+          <span class="text-[9px] uppercase font-bold text-slate-400 leading-none">You:</span>
+          <select id="activePlayerSelect" class="bg-transparent text-sm font-semibold text-amber-400 focus:outline-none cursor-pointer">
+            <!-- Dynamically populated -->
+          </select>
+        </div>
       </div>
     </header>
 
     <!-- DATE PICKER ROW -->
     <div class="flex items-center justify-between glass border border-slate-800 rounded-2xl p-4">
       <div class="flex items-center gap-2">
-        <button id="prevDayBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm cursor-pointer">◀</button>
+        <button id="prevDayBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm cursor-pointer active:scale-95 transition">◀</button>
         <input type="date" id="currentDateInput" class="bg-slate-900 border border-slate-700 text-sm rounded-lg px-3 py-1.5 text-white font-mono focus:outline-none focus:border-amber-400" />
-        <button id="nextDayBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm cursor-pointer">▶</button>
+        <button id="nextDayBtn" class="px-3 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 border border-slate-700 text-sm cursor-pointer active:scale-95 transition">▶</button>
       </div>
       <button id="todayBtn" class="text-xs text-amber-400 hover:underline font-semibold cursor-pointer">Today</button>
     </div>
@@ -78,14 +96,17 @@
       <button data-tab="configTab" class="tab-btn px-4 py-2.5 border-b-2 border-transparent text-slate-400 hover:text-white">Settings</button>
     </nav>
 
-    <!-- TAB 1: DAILY SCORES & COMMENTS IN ONE SECTION -->
+    <!-- TAB 1: DAILY SCORES & BANTER -->
     <section id="scoresTab" class="space-y-6">
       <!-- Quick Entry Box for Active Player -->
       <div class="glass border border-slate-800 rounded-2xl p-5">
         <div class="flex items-center justify-between mb-4">
-          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">
-            Log Scores (<span id="activePlayerNameLabel" class="text-amber-400">Player 1</span>)
-          </h3>
+          <div class="flex items-center gap-2.5">
+            <img id="entryAvatarImg" src="" alt="Avatar" class="w-6 h-6 rounded-full object-cover border border-amber-400/50 bg-slate-800" />
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">
+              Log Scores (<span id="activePlayerNameLabel" class="text-amber-400">Player</span>)
+            </h3>
+          </div>
           <span class="text-xs text-slate-500">Fill any or all</span>
         </div>
 
@@ -94,7 +115,7 @@
         </div>
 
         <div class="flex items-center gap-4 mt-5">
-          <button id="saveScoresBtn" type="button" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm px-6 py-2.5 rounded-xl transition cursor-pointer">
+          <button id="saveScoresBtn" type="button" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-sm px-6 py-2.5 rounded-xl transition cursor-pointer active:scale-95">
             Save Scores
           </button>
           <span id="saveStatus" class="text-xs font-semibold text-emerald-400 hidden">✓ Saved to cloud</span>
@@ -116,25 +137,43 @@
         </table>
       </div>
 
-      <!-- Daily Trash Talk & Banter (with inline editing) -->
+      <!-- Daily Trash Talk & Banter Section -->
       <div class="glass border border-slate-800 rounded-2xl p-5 space-y-4">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Daily Trash Talk & Banter</h3>
-        <div id="commentsList" class="space-y-3 max-h-80 overflow-y-auto pr-2">
+        <div class="flex items-center justify-between">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Daily Trash Talk & Banter</h3>
+          <span class="text-[10px] text-slate-500">Tap photos to zoom</span>
+        </div>
+
+        <div id="commentsList" class="space-y-3 max-h-96 overflow-y-auto pr-1">
           <p class="text-xs text-slate-500 italic">No notes left for this day yet.</p>
         </div>
-        <form id="commentForm" class="flex gap-2 pt-2 border-t border-slate-800">
-          <input id="commentInput" type="text" placeholder="Drop a comment for today..." 
-                 class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-amber-400" />
-          <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2 rounded-xl text-sm transition cursor-pointer">
-            Post
-          </button>
+
+        <!-- Comment Input Box with Image Attachment -->
+        <form id="commentForm" class="space-y-3 pt-3 border-t border-slate-800">
+          <!-- Thumbnail preview container before sending -->
+          <div id="commentImagePreviewContainer" class="hidden relative inline-block">
+            <img id="commentImagePreview" src="" alt="Selected Preview" class="w-16 h-16 rounded-xl object-cover border border-amber-400/80 shadow-md" />
+            <button type="button" id="removeCommentImageBtn" class="absolute -top-1.5 -right-1.5 bg-rose-500 hover:bg-rose-400 text-white rounded-full w-5 h-5 text-[10px] flex items-center justify-center font-bold shadow cursor-pointer">✕</button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <!-- Hidden file input -->
+            <input type="file" id="commentImageFileInput" accept="image/*" class="hidden" />
+            <button type="button" id="triggerCommentImageBtn" title="Attach Photo" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 p-2.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0">
+              📷
+            </button>
+            <input id="commentInput" type="text" placeholder="Drop a comment or meme..." 
+                   class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-amber-400" />
+            <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl text-sm transition cursor-pointer active:scale-95 shrink-0">
+              Post
+            </button>
+          </div>
         </form>
       </div>
     </section>
 
     <!-- TAB 2: SCOREBOARD HISTORY & ANALYTICS -->
     <section id="historyTab" class="hidden space-y-6">
-      <!-- All-Time Leaderboard & Averages Matrix -->
       <div class="glass border border-slate-800 rounded-2xl p-5">
         <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">🏆 All-Time Group Performance & Averages</h3>
         <div class="overflow-x-auto">
@@ -151,7 +190,6 @@
         </div>
       </div>
 
-      <!-- Past Days Summary Log -->
       <div class="glass border border-slate-800 rounded-2xl p-5">
         <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">📅 Daily Winners Log (Click row to inspect)</h3>
         <div class="overflow-x-auto">
@@ -171,17 +209,23 @@
 
     <!-- TAB 3: SETTINGS -->
     <section id="configTab" class="hidden glass border border-slate-800 rounded-2xl p-5 space-y-8">
-      <!-- Player Names Settings (Available to all) -->
+      
+      <!-- Player Profiles & Avatar Uploads -->
       <div>
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Player Names</h3>
-        <div id="playerNamesConfig" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <!-- Generated via JS -->
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Player Profiles & Avatars</h3>
+          <span class="text-[10px] text-slate-500">Tap avatar circle to upload photo</span>
         </div>
+
+        <div id="playerProfilesConfig" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <!-- Dynamically generated with avatar uploader -->
+        </div>
+
         <div class="flex items-center gap-3 mt-4">
-          <button id="savePlayerNamesBtn" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-2 rounded-lg transition cursor-pointer">
+          <button id="savePlayerNamesBtn" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-2 rounded-lg transition cursor-pointer active:scale-95">
             Save Names
           </button>
-          <span id="playerSaveStatus" class="text-xs text-emerald-400 font-semibold hidden">✓ Names Updated</span>
+          <span id="playerSaveStatus" class="text-xs text-emerald-400 font-semibold hidden">✓ Profiles Saved</span>
         </div>
       </div>
 
@@ -190,11 +234,24 @@
         <div class="flex items-center justify-between">
           <div>
             <h3 class="text-sm font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
-              👑 Admin Settings (Player 1 Exclusive)
+              👑 Admin Settings (Player 1 Exclusive -- don't mess with this pls)
             </h3>
-            <p class="text-xs text-slate-400">Add or manage players and games tracked in this league.</p>
+            <p class="text-xs text-slate-400">Manage announcements, players, and games.</p>
           </div>
           <span class="text-[10px] bg-amber-400/10 text-amber-300 font-mono px-2 py-0.5 rounded border border-amber-400/20">ADMIN ACTIVE</span>
+        </div>
+
+        <!-- Announcement Banner Editor -->
+        <div class="bg-slate-900/70 border border-slate-800 rounded-xl p-4 space-y-3">
+          <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wide">Homepage Announcement Banner</h4>
+          <p class="text-[11px] text-slate-400">Leave blank to hide the banner. Supports league updates or rules changes.</p>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input id="adminBannerInput" type="text" placeholder="e.g. Scored adjusted for Monday; new Clueless rules active!"
+                   class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400" />
+            <button id="saveBannerBtn" type="button" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-2 rounded-lg transition cursor-pointer active:scale-95 shrink-0">
+              Update Banner
+            </button>
+          </div>
         </div>
 
         <!-- Add Player Form -->
@@ -203,7 +260,7 @@
           <div class="flex gap-2">
             <input id="newPlayerName" type="text" placeholder="e.g. Charlie" required
                    class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-amber-400" />
-            <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-1.5 rounded-lg transition cursor-pointer">
+            <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-1.5 rounded-lg transition cursor-pointer active:scale-95">
               + Add Player
             </button>
           </div>
@@ -236,7 +293,7 @@
                      class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-amber-400 font-mono" />
             </div>
           </div>
-          <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-2 rounded-lg transition cursor-pointer">
+          <button type="submit" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-2 rounded-lg transition cursor-pointer active:scale-95">
             + Add Game to League
           </button>
         </form>
@@ -265,33 +322,113 @@
     }
 
     // -------------------------------------------------------------
-    // TOAST NOTIFICATION UTILITY
+    // CLIENT-SIDE CANVAS IMAGE COMPRESSION (Zero billing / No storage fees)
+    // -------------------------------------------------------------
+    function processImageFile(file, { maxWidth, maxHeight, quality, squareCrop }) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            let srcX = 0, srcY = 0, srcW = img.width, srcH = img.height;
+            let destW = img.width, destH = img.height;
+
+            if (squareCrop) {
+              // Center crop to square for avatars
+              const size = Math.min(srcW, srcH);
+              srcX = (srcW - size) / 2;
+              srcY = (srcH - size) / 2;
+              srcW = size;
+              srcH = size;
+              destW = Math.min(size, maxWidth);
+              destH = destW;
+            } else {
+              // Maintain aspect ratio for banter photos
+              if (destW > maxWidth || destH > maxHeight) {
+                const ratio = Math.min(maxWidth / destW, maxHeight / destH);
+                destW = Math.round(destW * ratio);
+                destH = Math.round(destH * ratio);
+              }
+            }
+
+            canvas.width = destW;
+            canvas.height = destH;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(img, srcX, srcY, srcW, srcH, 0, 0, destW, destH);
+            resolve(canvas.toDataURL("image/jpeg", quality));
+          };
+          img.onerror = reject;
+          img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    // -------------------------------------------------------------
+    // MOBILE-FRIENDLY TOAST NOTIFICATION UTILITY
     // -------------------------------------------------------------
     function showToast(message, type = 'info') {
       const container = document.getElementById('toastContainer');
       const toast = document.createElement('div');
+      
+      const styles = {
+        success: 'bg-emerald-950/90 border-emerald-500/80 text-emerald-200 shadow-emerald-950/50',
+        error: 'bg-rose-950/90 border-rose-500/80 text-rose-200 shadow-rose-950/50',
+        info: 'bg-slate-900/95 border-amber-400/60 text-slate-100 shadow-black/80'
+      };
 
       if (type === 'error') {
         message = "Text Xavier if you see this! -- " + message;
       }
-      
-      const bgColors = {
-        success: 'bg-emerald-500/90 border-emerald-400 text-slate-950 font-semibold',
-        error: 'bg-rose-500/95 border-rose-400 text-white font-semibold',
-        info: 'bg-slate-800/90 border-slate-700 text-slate-100 font-medium'
-      };
 
-      toast.className = `px-4 py-3 rounded-xl border shadow-2xl text-xs backdrop-blur-md transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto flex items-center gap-2 max-w-sm ${bgColors[type] || bgColors.info}`;
       const icon = type === 'success' ? '✓' : type === 'error' ? '⚠️' : 'ℹ️';
-      toast.innerHTML = `<span>${icon}</span> <span>${message}</span>`;
+
+      toast.className = `w-[92vw] sm:w-auto sm:min-w-[280px] max-w-sm px-4 py-3 rounded-2xl border shadow-2xl text-xs sm:text-sm backdrop-blur-xl transition-all duration-300 transform translate-y-4 opacity-0 pointer-events-auto flex items-center justify-between gap-3 cursor-pointer select-none active:scale-98 ${styles[type] || styles.info}`;
+      
+      toast.innerHTML = `
+        <div class="flex items-center gap-2.5 truncate">
+          <span class="text-sm font-bold shrink-0">${icon}</span>
+          <span class="font-medium leading-tight truncate">${message}</span>
+        </div>
+        <span class="text-slate-500 hover:text-white text-xs shrink-0 pl-1">✕</span>
+      `;
+
+      toast.addEventListener('click', () => dismissToast(toast));
       container.appendChild(toast);
 
-      requestAnimationFrame(() => toast.classList.remove('translate-y-2', 'opacity-0'));
-      setTimeout(() => {
-        toast.classList.add('opacity-0', '-translate-y-2');
-        setTimeout(() => toast.remove(), 300);
-      }, 4000);
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-4', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+      });
+
+      const autoDismissTimeout = setTimeout(() => dismissToast(toast), 3800);
+
+      function dismissToast(el) {
+        clearTimeout(autoDismissTimeout);
+        el.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => el.remove(), 250);
+      }
     }
+
+    // -------------------------------------------------------------
+    // LIGHTBOX CONTROLS
+    // -------------------------------------------------------------
+    const imageLightbox = document.getElementById("imageLightbox");
+    const lightboxImg = document.getElementById("lightboxImg");
+    const closeLightboxBtn = document.getElementById("closeLightboxBtn");
+
+    function openLightbox(src) {
+      lightboxImg.src = src;
+      imageLightbox.classList.remove("hidden");
+    }
+
+    imageLightbox.addEventListener("click", () => imageLightbox.classList.add("hidden"));
+    closeLightboxBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      imageLightbox.classList.add("hidden");
+    });
 
     // -------------------------------------------------------------
     // 1. CONFIGURATION & FIREBASE INITIALIZATION
@@ -317,11 +454,12 @@
     }
 
     const DEFAULT_CONFIG = {
+      banner: "",
       players: {
-        p1: { name: "Player 1" },
-        p2: { name: "Player 2" },
-        p3: { name: "Player 3" },
-        p4: { name: "Player 4" }
+        p1: { name: "Player 1", avatar: "" },
+        p2: { name: "Player 2", avatar: "" },
+        p3: { name: "Player 3", avatar: "" },
+        p4: { name: "Player 4", avatar: "" }
       },
       games: {
         krillion: { name: "Krillion", direction: "high", min: 0, max: 2000, step: 1 },
@@ -349,6 +487,28 @@
     function getPlayerName(pId) {
       return appState.config.players[pId]?.name || `Player ${pId.replace('p', '')}`;
     }
+
+function getPlayerAvatar(pId) {
+  if (appState.config.players[pId]?.avatar) {
+    return appState.config.players[pId].avatar;
+  }
+  
+  // Clean default avatar: colored circle with first letter initial (URL encoded to prevent HTML syntax breakage)
+  const initial = encodeURIComponent((getPlayerName(pId)[0] || '?').toUpperCase());
+  
+  // Deterministic background colors based on player ID
+  const bgPalette = {
+    p1: '%23f59e0b', // Amber
+    p2: '%233b82f6', // Blue
+    p3: '%2310b981', // Emerald
+    p4: '%238b5cf6', // Purple
+    p5: '%23ec4899', // Pink
+    p6: '%2306b6d4'  // Cyan
+  };
+  const bgColor = bgPalette[pId] || '%2364748b';
+
+  return `data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27%3E%3Crect%20width=%27100%25%27%20height=%27100%25%27%20fill=%27${bgColor}%27/%3E%3Ctext%20x=%2750%25%27%20y=%2754%25%27%20font-family=%27sans-serif%27%20font-weight=%27900%27%20font-size=%2746%27%20fill=%27%23020617%27%20text-anchor=%27middle%27%20dominant-baseline=%27middle%27%3E${initial}%3C/text%3E%3C/svg%3E`;
+}
 
     async function ensureAuthenticated() {
       if (!firebase.auth) return;
@@ -426,6 +586,7 @@
         appState.activePlayer = e.target.value;
         localStorage.setItem("selected_player_id", appState.activePlayer);
         updateAdminVisibility();
+        updateActivePlayerUI();
         renderEntryInputs();
         renderDailyTable();
         renderComments();
@@ -438,7 +599,9 @@
       setupConfigHandlers();
       setupAdminGameHandler();
       setupAdminPlayerHandler();
+      setupAdminBannerHandler();
       updatePlayerSelectOptions();
+      updateActivePlayerUI();
       updateAdminVisibility();
 
       if (db) {
@@ -457,6 +620,7 @@
           if (remotePlayers) {
             appState.config.players = remotePlayers;
             updatePlayerSelectOptions();
+            updateActivePlayerUI();
             renderConfigTab();
             renderAll();
           }
@@ -469,6 +633,11 @@
             renderConfigTab();
             renderAll();
           }
+        });
+
+        db.ref("config/banner").on("value", (snap) => {
+          appState.config.banner = snap.val() || "";
+          renderBanner();
         });
       }
 
@@ -493,10 +662,18 @@
       }
     }
 
+    function updateActivePlayerUI() {
+      const avatarSrc = getPlayerAvatar(appState.activePlayer);
+      document.getElementById("headerAvatarImg").src = avatarSrc;
+      document.getElementById("entryAvatarImg").src = avatarSrc;
+      document.getElementById("activePlayerNameLabel").innerText = getPlayerName(appState.activePlayer);
+    }
+
     // -------------------------------------------------------------
     // 4. RENDERING ROUTINES
     // -------------------------------------------------------------
     function renderAll() {
+      renderBanner();
       renderHeaderSubtext();
       renderEntryInputs();
       renderDailyTable();
@@ -506,6 +683,24 @@
       renderComments();
     }
 
+    function renderBanner() {
+      const bannerEl = document.getElementById("adminBanner");
+      const textEl = document.getElementById("adminBannerText");
+      const bannerInput = document.getElementById("adminBannerInput");
+      const bannerText = appState.config.banner ? appState.config.banner.trim() : "";
+
+      if (bannerInput && document.activeElement !== bannerInput) {
+        bannerInput.value = bannerText;
+      }
+
+      if (bannerText) {
+        textEl.innerText = bannerText;
+        bannerEl.classList.remove("hidden");
+      } else {
+        bannerEl.classList.add("hidden");
+      }
+    }
+
     function renderHeaderSubtext() {
       const gNames = Object.values(appState.config.games).map(g => g.name);
       document.getElementById("headerGamesSubtext").innerText = gNames.join(" • ") || "No games registered";
@@ -513,7 +708,7 @@
 
     function renderEntryInputs() {
       const container = document.getElementById("gameEntryInputs");
-      document.getElementById("activePlayerNameLabel").innerText = getPlayerName(appState.activePlayer);
+      updateActivePlayerUI();
       const dayScores = appState.scores[appState.date]?.[appState.activePlayer] || {};
 
       container.innerHTML = Object.entries(appState.config.games).map(([gKey, g]) => {
@@ -605,6 +800,7 @@
         const pScores = dateScores[pId] || {};
         const isSelf = pId === appState.activePlayer;
         const displayName = getPlayerName(pId);
+        const avatarSrc = getPlayerAvatar(pId);
 
         const scoreCells = games.map(([gKey, _]) => {
           const val = pScores[gKey];
@@ -614,7 +810,11 @@
         return `
           <tr class="${isSelf ? 'bg-amber-400/5' : ''}">
             <td class="py-2.5 font-sans font-medium text-slate-200">
-              ${displayName} ${isSelf ? '<span class="text-[10px] text-amber-400 font-bold ml-1">(You)</span>' : ''}
+              <div class="flex items-center gap-2">
+                <img src="${avatarSrc}" alt="${displayName}" class="w-5 h-5 rounded-full object-cover border border-slate-700 shrink-0" />
+                <span>${displayName}</span>
+                ${isSelf ? '<span class="text-[10px] text-amber-400 font-bold ml-0.5">(You)</span>' : ''}
+              </div>
             </td>
             ${scoreCells}
           </tr>
@@ -666,9 +866,6 @@
       }).join("");
     }
 
-    // -------------------------------------------------------------
-    // ALL-TIME ANALYTICS MATRIX
-    // -------------------------------------------------------------
     function renderAnalyticsTable() {
       const header = document.getElementById("analyticsTableHeader");
       const tbody = document.getElementById("analyticsTableBody");
@@ -747,7 +944,11 @@
         return `
           <tr class="${isSelf ? 'bg-amber-400/5' : ''}">
             <td class="py-2.5 font-sans font-medium text-slate-200">
-              ${getPlayerName(pId)} ${isSelf ? '<span class="text-[10px] text-amber-400 font-bold ml-1">(You)</span>' : ''}
+              <div class="flex items-center gap-2">
+                <img src="${getPlayerAvatar(pId)}" alt="${getPlayerName(pId)}" class="w-5 h-5 rounded-full object-cover border border-slate-700 shrink-0" />
+                <span>${getPlayerName(pId)}</span>
+                ${isSelf ? '<span class="text-[10px] text-amber-400 font-bold ml-0.5">(You)</span>' : ''}
+              </div>
             </td>
             <td class="py-2.5 text-amber-400 font-bold text-sm">${s ? s.totalWins : 0} wins</td>
             ${avgCells}
@@ -803,8 +1004,10 @@
     }
 
     // -------------------------------------------------------------
-    // COMMENTS & INLINE EDITING
+    // COMMENTS WITH AVATARS, IMAGES & LIGHTBOX
     // -------------------------------------------------------------
+    let pendingCommentImageBase64 = null;
+
     function renderComments() {
       const list = document.getElementById("commentsList");
       const dayComments = appState.comments[appState.date] || [];
@@ -816,19 +1019,30 @@
 
       list.innerHTML = dayComments.map((c, idx) => {
         const isOwner = c.authorId === appState.activePlayer;
+        const avatarSrc = c.authorAvatar || getPlayerAvatar(c.authorId || 'p1');
+
         return `
-          <div id="commentBox_${idx}" class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 text-xs">
-            <div class="flex justify-between items-center mb-1">
-              <div class="flex items-center gap-2">
-                <span class="font-bold text-amber-400">${c.player}</span>
-                ${c.edited ? '<span class="text-[9px] text-slate-500 italic">(edited)</span>' : ''}
+          <div id="commentBox_${idx}" class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 text-xs flex gap-3">
+            <img src="${avatarSrc}" alt="${c.player}" class="w-8 h-8 rounded-full object-cover border border-amber-400/40 shrink-0 mt-0.5" />
+            <div class="flex-1 min-w-0">
+              <div class="flex justify-between items-center mb-1">
+                <div class="flex items-center gap-2">
+                  <span class="font-bold text-amber-400 truncate">${c.player}</span>
+                  ${c.edited ? '<span class="text-[9px] text-slate-500 italic">(edited)</span>' : ''}
+                </div>
+                <div class="flex items-center gap-2 shrink-0">
+                  <span class="text-[10px] text-slate-500 font-mono">${c.time}</span>
+                  ${isOwner ? `<button onclick="startEditComment(${idx})" class="text-[10px] text-slate-400 hover:text-amber-400 cursor-pointer">Edit</button>` : ''}
+                </div>
               </div>
-              <div class="flex items-center gap-2">
-                <span class="text-[10px] text-slate-500 font-mono">${c.time}</span>
-                ${isOwner ? `<button onclick="startEditComment(${idx})" class="text-[10px] text-slate-400 hover:text-amber-400 cursor-pointer">Edit</button>` : ''}
-              </div>
+              <div id="commentText_${idx}" class="text-slate-200 leading-relaxed">${escapeHtml(c.text)}</div>
+              ${c.image ? `
+                <div class="mt-2.5">
+                  <img src="${c.image}" alt="Banter attachment" onclick="openLightbox('${c.image}')"
+                       class="max-h-48 max-w-full rounded-lg border border-slate-700/80 cursor-pointer hover:opacity-95 transition shadow" />
+                </div>
+              ` : ''}
             </div>
-            <div id="commentText_${idx}" class="text-slate-200">${escapeHtml(c.text)}</div>
           </div>
         `;
       }).join("");
@@ -875,22 +1089,69 @@
     };
 
     function setupCommentForm() {
+      const fileInput = document.getElementById("commentImageFileInput");
+      const triggerBtn = document.getElementById("triggerCommentImageBtn");
+      const previewContainer = document.getElementById("commentImagePreviewContainer");
+      const previewImg = document.getElementById("commentImagePreview");
+      const removeImgBtn = document.getElementById("removeCommentImageBtn");
+
+      triggerBtn.addEventListener("click", () => fileInput.click());
+
+      fileInput.addEventListener("change", async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+          // Optimized low quality compression for chat (640px max, 45% quality)
+          pendingCommentImageBase64 = await processImageFile(file, {
+            maxWidth: 640,
+            maxHeight: 640,
+            quality: 0.45,
+            squareCrop: false
+          });
+
+          previewImg.src = pendingCommentImageBase64;
+          previewContainer.classList.remove("hidden");
+          triggerBtn.classList.add("text-amber-400", "border-amber-400/80");
+        } catch (err) {
+          showToast("Failed to process photo: " + err.message, "error");
+        }
+        fileInput.value = "";
+      });
+
+      removeImgBtn.addEventListener("click", () => {
+        pendingCommentImageBase64 = null;
+        previewContainer.classList.add("hidden");
+        previewImg.src = "";
+        triggerBtn.classList.remove("text-amber-400", "border-amber-400/80");
+      });
+
       document.getElementById("commentForm").addEventListener("submit", async (e) => {
         e.preventDefault();
         const input = document.getElementById("commentInput");
         const text = input.value.trim();
-        if (!text) return;
+        
+        if (!text && !pendingCommentImageBase64) return;
 
         const newComment = {
           authorId: appState.activePlayer,
           player: getPlayerName(appState.activePlayer),
+          authorAvatar: getPlayerAvatar(appState.activePlayer),
           text: text,
+          image: pendingCommentImageBase64 || null,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
           edited: false
         };
 
         if (!appState.comments[appState.date]) appState.comments[appState.date] = [];
         appState.comments[appState.date].push(newComment);
+
+        // Reset draft inputs
+        input.value = "";
+        pendingCommentImageBase64 = null;
+        previewContainer.classList.add("hidden");
+        previewImg.src = "";
+        triggerBtn.classList.remove("text-amber-400", "border-amber-400/80");
 
         if (db) {
           try {
@@ -902,14 +1163,38 @@
             showToast(`Failed to post note: ${err.message}`, "error");
           }
         }
-        input.value = "";
         renderComments();
       });
     }
 
     // -------------------------------------------------------------
-    // PLAYER 1 CUSTOM ADMIN ROUTINES (PLAYERS & GAMES)
+    // PLAYER 1 ADMIN ROUTINES (BANNER, PLAYERS, GAMES)
     // -------------------------------------------------------------
+    function setupAdminBannerHandler() {
+      const saveBtn = document.getElementById("saveBannerBtn");
+      saveBtn.addEventListener("click", async () => {
+        if (appState.activePlayer !== "p1") {
+          showToast("Only Player 1 can update the banner.", "error");
+          return;
+        }
+
+        const input = document.getElementById("adminBannerInput");
+        const newText = input.value.trim();
+        appState.config.banner = newText;
+
+        if (db) {
+          try {
+            await ensureAuthenticated();
+            await db.ref("config/banner").set(newText);
+            showToast(newText ? "League banner posted!" : "League banner cleared.", "success");
+          } catch (err) {
+            showToast("Failed to save banner: " + err.message, "error");
+          }
+        }
+        renderBanner();
+      });
+    }
+
     function setupAdminPlayerHandler() {
       const form = document.getElementById("addPlayerForm");
       form.addEventListener("submit", async (e) => {
@@ -922,7 +1207,6 @@
         const name = document.getElementById("newPlayerName").value.trim();
         if (!name) return;
 
-        // Find next numeric player key (e.g. p5, p6)
         const existingIds = getPlayerIds();
         let maxNum = 0;
         existingIds.forEach(id => {
@@ -931,12 +1215,12 @@
         });
         const newPId = `p${maxNum + 1}`;
 
-        appState.config.players[newPId] = { name };
+        appState.config.players[newPId] = { name, avatar: "" };
 
         if (db) {
           try {
             await ensureAuthenticated();
-            await db.ref(`config/players/${newPId}`).set({ name });
+            await db.ref(`config/players/${newPId}`).set({ name, avatar: "" });
             showToast(`Player "${name}" added as ${newPId.toUpperCase()}!`, "success");
           } catch (err) {
             showToast(`Failed to add player: ${err.message}`, "error");
@@ -1019,19 +1303,46 @@
       select.value = appState.activePlayer;
     }
 
+    // -------------------------------------------------------------
+    // SETTINGS TAB & AVATAR UPLOAD HANDLERS
+    // -------------------------------------------------------------
     function renderConfigTab() {
       const playerIds = getPlayerIds();
 
-      // 1. Player Names Section
-      const container = document.getElementById("playerNamesConfig");
-      container.innerHTML = playerIds.map(id => `
-        <div>
-          <label class="block text-xs text-slate-400 mb-1">${id.toUpperCase()}</label>
-          <input id="cfg_player_${id}" value="${getPlayerName(id)}" class="bg-slate-900 border border-slate-700 text-sm rounded-lg px-3 py-1.5 w-full text-white focus:outline-none focus:border-amber-400" />
-        </div>
-      `).join("");
+      // 1. Player Profiles & Avatar Upload Cards
+      const container = document.getElementById("playerProfilesConfig");
+      container.innerHTML = playerIds.map(id => {
+        const isSelf = id === appState.activePlayer;
+        const avatarSrc = getPlayerAvatar(id);
 
-      // 2. Games List Section (Admin view)
+        return `
+          <div class="bg-slate-900/60 border ${isSelf ? 'border-amber-400/50' : 'border-slate-800'} rounded-xl p-3 flex items-center gap-3">
+            <!-- Hidden file input for this player -->
+            <input type="file" id="avatarFileInput_${id}" accept="image/*" class="hidden" onchange="handleAvatarUpload('${id}', this.files)" />
+            
+            <!-- Clickable Avatar with Camera Icon Overlay -->
+            <div class="relative cursor-pointer group shrink-0" onclick="document.getElementById('avatarFileInput_${id}').click()">
+              <img id="avatarPreview_${id}" src="${avatarSrc}" alt="${getPlayerName(id)}" 
+                   class="w-12 h-12 rounded-full object-cover border-2 border-slate-700 group-hover:border-amber-400 transition" />
+              <div class="absolute inset-0 bg-black/40 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition text-[11px]">
+                📷
+              </div>
+            </div>
+
+            <!-- Name Input -->
+            <div class="flex-1 min-w-0">
+              <div class="flex justify-between items-center mb-1">
+                <label class="text-[10px] text-slate-400 font-mono">${id.toUpperCase()}</label>
+                ${isSelf ? '<span class="text-[9px] text-amber-400 font-bold">(You)</span>' : ''}
+              </div>
+              <input id="cfg_player_${id}" value="${getPlayerName(id)}" 
+                     class="bg-slate-950 border border-slate-700 text-xs rounded-lg px-2.5 py-1.5 w-full text-white focus:outline-none focus:border-amber-400" />
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      // 2. Games List Section
       const gamesContainer = document.getElementById("gamesConfigList");
       gamesContainer.innerHTML = Object.entries(appState.config.games).map(([key, g]) => `
         <div class="flex items-center justify-between p-3 bg-slate-900/50 border border-slate-800 rounded-lg text-xs">
@@ -1044,6 +1355,36 @@
       `).join("");
     }
 
+    // Avatar upload handler preserving square high quality (256x256, 88% quality)
+    window.handleAvatarUpload = async function(pId, files) {
+      const file = files[0];
+      if (!file) return;
+
+      try {
+        const base64 = await processImageFile(file, {
+          maxWidth: 256,
+          maxHeight: 256,
+          quality: 0.88,
+          squareCrop: true
+        });
+
+        if (!appState.config.players[pId]) appState.config.players[pId] = {};
+        appState.config.players[pId].avatar = base64;
+
+        if (db) {
+          await ensureAuthenticated();
+          await db.ref(`config/players/${pId}/avatar`).set(base64);
+        }
+
+        updateActivePlayerUI();
+        renderConfigTab();
+        renderAll();
+        showToast(`Avatar updated for ${getPlayerName(pId)}!`, "success");
+      } catch (err) {
+        showToast("Avatar upload failed: " + err.message, "error");
+      }
+    };
+
     function setupConfigHandlers() {
       renderConfigTab();
       document.getElementById("savePlayerNamesBtn").onclick = async () => {
@@ -1052,8 +1393,11 @@
         playerIds.forEach(id => {
           const val = document.getElementById(`cfg_player_${id}`)?.value.trim();
           if (val) {
-            payload[id] = { name: val };
-            appState.config.players[id] = { name: val };
+            payload[id] = {
+              name: val,
+              avatar: appState.config.players[id]?.avatar || ""
+            };
+            appState.config.players[id].name = val;
           }
         });
 
@@ -1064,13 +1408,14 @@
             const status = document.getElementById("playerSaveStatus");
             status.classList.remove("hidden");
             setTimeout(() => status.classList.add("hidden"), 3000);
-            showToast("Player names saved!", "success");
+            showToast("Player profiles saved!", "success");
           } catch (err) {
             showToast(`Failed to save names: ${err.message}`, "error");
           }
         }
 
         updatePlayerSelectOptions();
+        updateActivePlayerUI();
         renderAll();
       };
     }
