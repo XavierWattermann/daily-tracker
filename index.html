@@ -122,19 +122,38 @@
         </div>
       </div>
 
-      <!-- Group Standings Table -->
-      <div class="glass border border-slate-800 rounded-2xl p-5 overflow-x-auto">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-3">Today's Group Standings</h3>
-        <table class="w-full text-left text-sm" id="dailyTable">
-          <thead>
-            <tr id="dailyTableHeader" class="border-b border-slate-800 text-slate-400 text-xs">
+      <!-- Group Standings (Mobile Cards + Responsive Table) -->
+      <div class="glass border border-slate-800 rounded-2xl p-3.5 sm:p-5">
+        <div class="flex items-center justify-between gap-2 mb-3">
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Today's Group Standings</h3>
+            <p class="text-[11px] text-slate-500">👑 Daily leader • 🔥 Personal Record (PR)</p>
+          </div>
+          <!-- View Mode Toggle (Auto-defaults to Cards on mobile, Table on desktop) -->
+          <div class="inline-flex bg-slate-900 border border-slate-800 rounded-xl p-0.5 text-[11px] font-semibold shrink-0">
+            <button type="button" id="standingsCardsViewBtn" class="px-2.5 py-1 rounded-lg transition cursor-pointer">Cards</button>
+            <button type="button" id="standingsTableViewBtn" class="px-2.5 py-1 rounded-lg transition cursor-pointer">Table</button>
+          </div>
+        </div>
+
+        <!-- Mobile-Friendly Cards Container -->
+        <div id="dailyCardsContainer" class="space-y-2.5">
+          <!-- Injected via JS -->
+        </div>
+
+        <!-- Streamlined Table Container -->
+        <div id="dailyTableContainer" class="overflow-x-auto -mx-1 px-1">
+          <table class="w-full text-left text-sm" id="dailyTable">
+            <thead>
+              <tr id="dailyTableHeader" class="border-b border-slate-800 text-slate-400 text-xs">
+                <!-- Injected via JS -->
+              </tr>
+            </thead>
+            <tbody id="dailyTableBody" class="divide-y divide-slate-800 font-mono">
               <!-- Injected via JS -->
-            </tr>
-          </thead>
-          <tbody id="dailyTableBody" class="divide-y divide-slate-800 font-mono">
-            <!-- Injected via JS -->
-          </tbody>
-        </table>
+            </tbody>
+          </table>
+        </div>
       </div>
 
       <!-- Daily Trash Talk & Banter Section -->
@@ -172,8 +191,45 @@
 
     <!-- TAB 2: SCOREBOARD HISTORY & ANALYTICS -->
     <section id="historyTab" class="hidden space-y-6">
-      <div class="glass border border-slate-800 rounded-2xl p-5">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">🏆 All-Time Group Performance & Averages</h3>
+      
+      <!-- SEASON / TIMEFRAME FILTER BAR -->
+      <div class="glass border border-slate-800 rounded-2xl p-4 space-y-3">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400">League Season Filter</h3>
+            <p id="seasonRangeSubtext" class="text-[11px] text-slate-500">Viewing all recorded league history</p>
+          </div>
+
+          <!-- Season Mode Buttons -->
+          <div class="inline-flex bg-slate-900 border border-slate-800 rounded-xl p-1 text-xs font-semibold">
+            <button type="button" data-season-mode="week" class="season-mode-btn px-3 py-1.5 rounded-lg transition cursor-pointer text-slate-400 hover:text-white">Weekly</button>
+            <button type="button" data-season-mode="month" class="season-mode-btn px-3 py-1.5 rounded-lg transition cursor-pointer text-slate-400 hover:text-white">Monthly</button>
+            <button type="button" data-season-mode="all" class="season-mode-btn px-3 py-1.5 rounded-lg transition cursor-pointer bg-amber-500 text-slate-950 font-bold">All-Time</button>
+          </div>
+        </div>
+
+        <!-- Period Stepper (Visible when Weekly or Monthly is selected) -->
+        <div id="seasonStepperRow" class="hidden flex items-center justify-between bg-slate-900/80 border border-slate-800 rounded-xl px-3 py-2">
+          <div class="flex items-center gap-2">
+            <button type="button" id="prevSeasonBtn" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700 text-xs cursor-pointer active:scale-95 transition">◀</button>
+            <span id="seasonPeriodLabel" class="text-xs sm:text-sm font-bold text-amber-400 font-mono px-2">Oct 2026</span>
+            <button type="button" id="nextSeasonBtn" class="px-2.5 py-1 rounded-lg bg-slate-950 hover:bg-slate-800 border border-slate-700 text-xs cursor-pointer active:scale-95 transition">▶</button>
+          </div>
+          <button type="button" id="currentSeasonBtn" class="text-xs text-amber-400 hover:underline font-semibold cursor-pointer">Current Period</button>
+        </div>
+
+        <!-- Season Champion Callout -->
+        <div id="seasonChampionBanner" class="bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent border border-amber-500/30 rounded-xl px-3.5 py-2.5 flex items-center justify-between gap-2 text-xs">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- GROUP PERFORMANCE & AVERAGES -->
+      <div class="glass border border-slate-800 rounded-2xl p-4 sm:p-5">
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4">
+          <h3 id="analyticsTableHeading" class="text-sm font-bold uppercase tracking-wider text-slate-400">🏆 All-Time Group Performance & Averages</h3>
+          <span id="analyticsActiveDaysBadge" class="text-[11px] font-mono text-slate-400 bg-slate-900 border border-slate-800 px-2.5 py-0.5 rounded-full">0 active days</span>
+        </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm" id="analyticsTable">
             <thead>
@@ -188,8 +244,79 @@
         </div>
       </div>
 
-      <div class="glass border border-slate-800 rounded-2xl p-5">
-        <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">📅 Daily Winners Log (Click row to inspect)</h3>
+      <!-- SCORE TREND SPARKLINES & CHARTS -->
+      <div class="glass border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">📈 Score Trends & Sparklines</h3>
+            <p class="text-[11px] text-slate-500">Player trajectories & recent form</p>
+          </div>
+          <!-- Game Selector Pills for Chart -->
+          <div id="trendGameTabs" class="flex flex-wrap gap-1.5 bg-slate-900 border border-slate-800 p-1 rounded-xl text-xs">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- Interactive Multi-Player SVG Trend Chart -->
+        <div id="trendChartContainer" class="bg-slate-900/70 border border-slate-800/90 rounded-xl p-3 sm:p-4">
+          <!-- Injected via JS -->
+        </div>
+
+        <!-- Per-Player Sparkline & Recent Form Cards -->
+        <div id="playerSparklinesGrid" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- CONSISTENCY & PARTICIPATION STATS -->
+      <div class="glass border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">🎯 Consistency & Participation</h3>
+            <p class="text-[11px] text-slate-500">Attendance, win efficiency, active streaks, and score steadiness (±σ)</p>
+          </div>
+        </div>
+        <div id="consistencyStatsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <!-- Injected via JS -->
+        </div>
+      </div>
+
+      <!-- PERSONAL RECORDS (PRs) & HALL OF FAME -->
+      <div class="glass border border-slate-800 rounded-2xl p-4 sm:p-5 space-y-5">
+        <div>
+          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">🏛️ Hall of Fame & Personal Records</h3>
+          <p class="text-[11px] text-slate-500">All-time league records and each player's personal bests</p>
+        </div>
+
+        <!-- All-Time League Records Per Game -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wide text-amber-400/90 mb-2.5">👑 All-Time League Records</h4>
+          <div id="hallOfFameCards" class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <!-- Injected via JS -->
+          </div>
+        </div>
+
+        <!-- Personal Records Matrix Per Player -->
+        <div>
+          <h4 class="text-xs font-bold uppercase tracking-wide text-slate-300 mb-2.5">🔥 Player Personal Records (PRs)</h4>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm" id="prTable">
+              <thead>
+                <tr id="prTableHeader" class="border-b border-slate-800 text-slate-400 text-xs">
+                  <!-- Injected via JS -->
+                </tr>
+              </thead>
+              <tbody id="prTableBody" class="divide-y divide-slate-800 font-mono">
+                <!-- Injected via JS -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- DAILY WINNERS LOG -->
+      <div class="glass border border-slate-800 rounded-2xl p-4 sm:p-5">
+        <h3 id="historyTableHeading" class="text-sm font-bold uppercase tracking-wider text-slate-400 mb-4">📅 Daily Winners Log (Click row to inspect)</h3>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-sm" id="historyTable">
             <thead>
@@ -465,10 +592,28 @@
     let appState = {
       date: getLocalDateString(),
       activePlayer: localStorage.getItem("selected_player_id") || "p1",
+      standingsView: localStorage.getItem("standings_view") || (window.innerWidth < 640 ? "cards" : "table"),
+      seasonMode: "all", // 'week' | 'month' | 'all'
+      seasonRefDate: getLocalDateString(),
+      selectedTrendGame: null,
+      hiddenTrendPlayers: {},
       scores: {},
       comments: {},
       config: JSON.parse(JSON.stringify(DEFAULT_CONFIG))
     };
+
+    const PLAYER_HEX_COLORS = {
+      p1: "#f59e0b", // amber
+      p2: "#3b82f6", // blue
+      p3: "#10b981", // emerald
+      p4: "#8b5cf6", // violet
+      p5: "#ec4899", // pink
+      p6: "#06b6d4"  // cyan
+    };
+
+    function getPlayerColor(pId) {
+      return PLAYER_HEX_COLORS[pId] || "#94a3b8";
+    }
 
     function getPlayerIds() {
       return Object.keys(appState.config.players).sort((a, b) => {
@@ -500,6 +645,164 @@
 
       return `data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27%3E%3Crect%20width=%27100%25%27%20height=%27100%25%27%20fill=%27${bgColor}%27/%3E%3Ctext%20x=%2750%25%27%20y=%2754%25%27%20font-family=%27sans-serif%27%20font-weight=%27900%27%20font-size=%2746%27%20fill=%27%23020617%27%20text-anchor=%27middle%27%20dominant-baseline=%27middle%27%3E${initial}%3C/text%3E%3C/svg%3E`;
     }
+
+    // -------------------------------------------------------------
+    // DATE, SEASON & RECORD COMPUTATION HELPERS
+    // -------------------------------------------------------------
+    function parseDateStr(dStr) {
+      const parts = (dStr || getLocalDateString()).split("-").map(Number);
+      return new Date(parts[0], (parts[1] || 1) - 1, parts[2] || 1);
+    }
+
+    function formatShortDate(dStr) {
+      if (!dStr) return "";
+      const d = parseDateStr(dStr);
+      return d.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+    }
+
+    function getWeekBounds(refDateStr) {
+      const d = parseDateStr(refDateStr);
+      const dayOfWeek = d.getDay(); // 0 (Sun) to 6 (Sat)
+      const diffToMonday = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+      const monday = new Date(d);
+      monday.setDate(d.getDate() + diffToMonday);
+      const sunday = new Date(monday);
+      sunday.setDate(monday.getDate() + 6);
+
+      const startStr = getLocalDateString(monday);
+      const endStr = getLocalDateString(sunday);
+      const sameYear = monday.getFullYear() === sunday.getFullYear();
+      const startFmt = monday.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+      const endFmt = sunday.toLocaleDateString(undefined, { month: "short", day: "numeric", year: sameYear ? undefined : "numeric" });
+      return {
+        startStr,
+        endStr,
+        label: `${startFmt} – ${endFmt}, ${sunday.getFullYear()}`
+      };
+    }
+
+    function getMonthBounds(refDateStr) {
+      const d = parseDateStr(refDateStr);
+      const year = d.getFullYear();
+      const month = String(d.getMonth() + 1).padStart(2, "0");
+      const monthPrefix = `${year}-${month}`;
+      const label = d.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+      return { monthPrefix, label };
+    }
+
+    function getAllActiveDates() {
+      const games = Object.keys(appState.config.games || {});
+      const playerIds = getPlayerIds();
+      return Object.keys(appState.scores || {})
+        .filter(d => {
+          const dayObj = appState.scores[d];
+          if (!dayObj || typeof dayObj !== "object") return false;
+          return playerIds.some(pId =>
+            games.some(gKey => {
+              const v = dayObj[pId]?.[gKey];
+              return v !== undefined && v !== null && v !== "" && !isNaN(Number(v));
+            })
+          );
+        })
+        .sort();
+    }
+
+    function getSeasonFilteredDates() {
+      const allDates = getAllActiveDates();
+      if (appState.seasonMode === "week") {
+        const { startStr, endStr } = getWeekBounds(appState.seasonRefDate);
+        return allDates.filter(d => d >= startStr && d <= endStr);
+      }
+      if (appState.seasonMode === "month") {
+        const { monthPrefix } = getMonthBounds(appState.seasonRefDate);
+        return allDates.filter(d => d.startsWith(monthPrefix));
+      }
+      return allDates;
+    }
+
+    function isBetterScore(val, refVal, direction) {
+      if (refVal === null || refVal === undefined) return true;
+      return direction === "high" ? val > refVal : val < refVal;
+    }
+
+    function computeAllTimeRecords(excludeDateForPlayer = null) {
+      const games = Object.entries(appState.config.games || {});
+      const playerIds = getPlayerIds();
+      const allDates = getAllActiveDates();
+
+      const leagueRecords = {};
+      const personalRecords = {};
+
+      playerIds.forEach(pId => {
+        personalRecords[pId] = {};
+      });
+
+      games.forEach(([gKey, g]) => {
+        let bestLeagueVal = null;
+        let holdersMap = {}; // pId -> latest/first date
+
+        playerIds.forEach(pId => {
+          let bestPlayerVal = null;
+          let bestPlayerDates = [];
+          let count = 0;
+
+          allDates.forEach(d => {
+            if (excludeDateForPlayer && excludeDateForPlayer.date === d && excludeDateForPlayer.pId === pId && excludeDateForPlayer.gKey === gKey) {
+              return;
+            }
+            const rawVal = appState.scores[d]?.[pId]?.[gKey];
+            if (rawVal === undefined || rawVal === null || rawVal === "") return;
+            const v = Number(rawVal);
+            if (isNaN(v)) return;
+
+            count++;
+            if (bestPlayerVal === null || isBetterScore(v, bestPlayerVal, g.direction)) {
+              bestPlayerVal = v;
+              bestPlayerDates = [d];
+            } else if (v === bestPlayerVal) {
+              bestPlayerDates.push(d);
+            }
+
+            if (bestLeagueVal === null || isBetterScore(v, bestLeagueVal, g.direction)) {
+              bestLeagueVal = v;
+              holdersMap = { [pId]: d };
+            } else if (v === bestLeagueVal) {
+              if (!holdersMap[pId]) holdersMap[pId] = d;
+            }
+          });
+
+          personalRecords[pId][gKey] = {
+            value: bestPlayerVal,
+            dates: bestPlayerDates,
+            latestDate: bestPlayerDates[bestPlayerDates.length - 1] || null,
+            count
+          };
+        });
+
+        leagueRecords[gKey] = {
+          value: bestLeagueVal,
+          holders: Object.entries(holdersMap).map(([pId, date]) => ({ pId, date }))
+        };
+
+        playerIds.forEach(pId => {
+          const pr = personalRecords[pId][gKey];
+          pr.isLeagueRecord = (pr.value !== null && bestLeagueVal !== null && pr.value === bestLeagueVal);
+        });
+      });
+
+      return { leagueRecords, personalRecords };
+    }
+
+    window.inspectDate = function(dateStr) {
+      if (!dateStr) return;
+      appState.date = dateStr;
+      const dateInput = document.getElementById("currentDateInput");
+      if (dateInput) dateInput.value = dateStr;
+      const dailyTabBtn = document.querySelector('.tab-btn[data-tab="scoresTab"]');
+      if (dailyTabBtn) dailyTabBtn.click();
+      renderAll();
+      showToast(`Viewing scores for ${dateStr}`, "info");
+    };
 
     async function ensureAuthenticated() {
       if (!firebase.auth) return;
@@ -581,11 +884,14 @@
         renderConfigTab();
         renderEntryInputs();
         renderDailyTable();
+        renderSeasonAnalyticsAll();
         renderComments();
       });
 
       document.getElementById("saveScoresBtn").addEventListener("click", saveScoresForActivePlayer);
 
+      setupStandingsViewToggle();
+      setupSeasonControls();
       setupTabs();
       setupCommentForm();
       setupConfigHandlers();
@@ -636,6 +942,50 @@
       renderAll();
     }
 
+    function setupStandingsViewToggle() {
+      const cardsBtn = document.getElementById("standingsCardsViewBtn");
+      const tableBtn = document.getElementById("standingsTableViewBtn");
+      if (!cardsBtn || !tableBtn) return;
+
+      cardsBtn.addEventListener("click", () => {
+        appState.standingsView = "cards";
+        localStorage.setItem("standings_view", "cards");
+        renderDailyTable();
+      });
+      tableBtn.addEventListener("click", () => {
+        appState.standingsView = "table";
+        localStorage.setItem("standings_view", "table");
+        renderDailyTable();
+      });
+    }
+
+    function setupSeasonControls() {
+      document.querySelectorAll(".season-mode-btn").forEach(btn => {
+        btn.addEventListener("click", () => {
+          appState.seasonMode = btn.dataset.seasonMode;
+          renderSeasonAnalyticsAll();
+        });
+      });
+
+      document.getElementById("prevSeasonBtn")?.addEventListener("click", () => shiftSeasonPeriod(-1));
+      document.getElementById("nextSeasonBtn")?.addEventListener("click", () => shiftSeasonPeriod(1));
+      document.getElementById("currentSeasonBtn")?.addEventListener("click", () => {
+        appState.seasonRefDate = getLocalDateString();
+        renderSeasonAnalyticsAll();
+      });
+    }
+
+    function shiftSeasonPeriod(delta) {
+      const d = parseDateStr(appState.seasonRefDate);
+      if (appState.seasonMode === "week") {
+        d.setDate(d.getDate() + delta * 7);
+      } else if (appState.seasonMode === "month") {
+        d.setMonth(d.getMonth() + delta);
+      }
+      appState.seasonRefDate = getLocalDateString(d);
+      renderSeasonAnalyticsAll();
+    }
+
     function shiftDate(deltaDays) {
       const parts = appState.date.split("-").map(Number);
       const cur = new Date(parts[0], parts[1] - 1, parts[2]);
@@ -670,9 +1020,17 @@
       renderEntryInputs();
       renderDailyTable();
       renderWinnersBanner();
-      renderAnalyticsTable();
-      renderHistoryTable();
+      renderSeasonAnalyticsAll();
       renderComments();
+    }
+
+    function renderSeasonAnalyticsAll() {
+      renderSeasonControls();
+      renderAnalyticsTable();
+      renderTrendsSection();
+      renderConsistencySection();
+      renderHallOfFameAndPRs();
+      renderHistoryTable();
     }
 
     function renderBanner() {
@@ -709,7 +1067,7 @@
           <div class="bg-slate-900/80 p-3 rounded-xl border border-slate-800">
             <div class="flex items-center justify-between mb-1">
               <label class="text-xs font-semibold text-slate-300 truncate">${g.name}</label>
-              <span class="text-[10px] text-slate-500 font-mono">${g.direction === 'high' ? 'High' : 'Low'}</span>
+              <span class="text-[10px] text-slate-500 font-mono">${g.direction === 'high' ? 'High ↑' : 'Low ↓'}</span>
             </div>
             <input type="number" id="input_${gKey}" value="${val}" min="${g.min ?? 0}" max="${g.max ?? 9999}" step="${g.step ?? 1}"
                    placeholder="${g.direction === 'high' ? 'Highest wins' : 'Lowest wins'}"
@@ -740,6 +1098,22 @@
         return;
       }
 
+      // Check for new Personal Records (PRs) or League Records before mutating state
+      const prCelebrations = [];
+      Object.entries(updates).forEach(([gKey, newVal]) => {
+        const g = appState.config.games[gKey];
+        if (!g) return;
+        const prior = computeAllTimeRecords({ date: appState.date, pId, gKey });
+        const priorPR = prior.personalRecords[pId]?.[gKey];
+        const priorLeague = prior.leagueRecords[gKey];
+
+        if (priorLeague && priorLeague.value !== null && isBetterScore(newVal, priorLeague.value, g.direction)) {
+          prCelebrations.push(`👑 NEW LEAGUE RECORD in ${g.name}: ${newVal}!`);
+        } else if (priorPR && priorPR.count > 0 && priorPR.value !== null && isBetterScore(newVal, priorPR.value, g.direction)) {
+          prCelebrations.push(`🔥 New Personal Record in ${g.name}: ${newVal}!`);
+        }
+      });
+
       if (!appState.scores[appState.date]) appState.scores[appState.date] = {};
       if (!appState.scores[appState.date][pId]) appState.scores[appState.date][pId] = {};
       Object.assign(appState.scores[appState.date][pId], updates);
@@ -753,6 +1127,9 @@
           await Promise.all(promises);
           showSaveFeedback("✓ Saved to cloud");
           showToast("Scores saved successfully to cloud!", "success");
+          prCelebrations.forEach((msg, i) => {
+            setTimeout(() => showToast(msg, "info"), (i + 1) * 650);
+          });
         } catch (err) {
           console.error("Firebase score write error:", err);
           showSaveFeedback("⚠️ Error writing to Firebase", true);
@@ -761,12 +1138,14 @@
       } else {
         showSaveFeedback("✓ Saved locally");
         showToast("Scores saved locally.", "info");
+        prCelebrations.forEach((msg, i) => {
+          setTimeout(() => showToast(msg, "info"), (i + 1) * 650);
+        });
       }
 
       renderDailyTable();
       renderWinnersBanner();
-      renderAnalyticsTable();
-      renderHistoryTable();
+      renderSeasonAnalyticsAll();
     }
 
     function showSaveFeedback(msg, isError = false) {
@@ -776,16 +1155,129 @@
       setTimeout(() => el.className = "text-xs font-semibold text-emerald-400 hidden", 3000);
     }
 
+    // -------------------------------------------------------------
+    // TODAY'S GROUP STANDINGS (MOBILE CARDS + STREAMLINED TABLE)
+    // -------------------------------------------------------------
     function renderDailyTable() {
+      const cardsBtn = document.getElementById("standingsCardsViewBtn");
+      const tableBtn = document.getElementById("standingsTableViewBtn");
+      const cardsContainer = document.getElementById("dailyCardsContainer");
+      const tableContainer = document.getElementById("dailyTableContainer");
       const header = document.getElementById("dailyTableHeader");
       const tbody = document.getElementById("dailyTableBody");
+
+      const isCardsView = appState.standingsView === "cards";
+      if (cardsBtn && tableBtn) {
+        if (isCardsView) {
+          cardsBtn.className = "px-2.5 py-1 rounded-lg transition cursor-pointer bg-amber-500 text-slate-950 font-bold";
+          tableBtn.className = "px-2.5 py-1 rounded-lg transition cursor-pointer text-slate-400 hover:text-white";
+        } else {
+          tableBtn.className = "px-2.5 py-1 rounded-lg transition cursor-pointer bg-amber-500 text-slate-950 font-bold";
+          cardsBtn.className = "px-2.5 py-1 rounded-lg transition cursor-pointer text-slate-400 hover:text-white";
+        }
+      }
+
+      if (cardsContainer && tableContainer) {
+        cardsContainer.classList.toggle("hidden", !isCardsView);
+        tableContainer.classList.toggle("hidden", isCardsView);
+      }
+
       const dateScores = appState.scores[appState.date] || {};
       const games = Object.entries(appState.config.games);
       const playerIds = getPlayerIds();
+      const { personalRecords } = computeAllTimeRecords();
 
+      // Determine today's best score per game
+      const dailyBest = {};
+      games.forEach(([gKey, g]) => {
+        let bVal = null;
+        playerIds.forEach(pId => {
+          const raw = dateScores[pId]?.[gKey];
+          if (raw !== undefined && raw !== null && raw !== "") {
+            const v = Number(raw);
+            if (!isNaN(v) && (bVal === null || isBetterScore(v, bVal, g.direction))) {
+              bVal = v;
+            }
+          }
+        });
+        dailyBest[gKey] = bVal;
+      });
+
+      // 1. Render Mobile-Friendly Cards View
+      if (cardsContainer) {
+        cardsContainer.innerHTML = playerIds.map(pId => {
+          const pScores = dateScores[pId] || {};
+          const isSelf = pId === appState.activePlayer;
+          const displayName = getPlayerName(pId);
+          const avatarSrc = getPlayerAvatar(pId);
+
+          let dailyLeadsCount = 0;
+          games.forEach(([gKey, _]) => {
+            const val = pScores[gKey];
+            if (val !== undefined && val !== null && dailyBest[gKey] !== null && Number(val) === dailyBest[gKey]) {
+              dailyLeadsCount++;
+            }
+          });
+
+          const gameTiles = games.map(([gKey, g]) => {
+            const val = pScores[gKey];
+            const hasScore = val !== undefined && val !== null && val !== "";
+            const numVal = hasScore ? Number(val) : null;
+            const isWin = hasScore && dailyBest[gKey] !== null && numVal === dailyBest[gKey];
+            const prObj = personalRecords[pId]?.[gKey];
+            const isPR = hasScore && prObj && prObj.count >= 1 && prObj.value === numVal;
+
+            return `
+              <div class="rounded-xl px-2.5 py-2 border ${isWin ? 'bg-amber-500/10 border-amber-500/40' : 'bg-slate-950/80 border-slate-800/90'} flex flex-col justify-between min-w-0">
+                <div class="flex items-center justify-between gap-1 mb-1">
+                  <span class="text-[10px] font-semibold text-slate-400 truncate">${g.name}</span>
+                  <span class="text-[9px] text-slate-500 font-mono shrink-0" title="${g.direction === 'high' ? 'Highest score wins' : 'Lowest score wins'}">${g.direction === 'high' ? '↑' : '↓'}</span>
+                </div>
+                <div class="flex items-center justify-between gap-1 font-mono">
+                  <span class="text-sm font-bold ${hasScore ? (isWin ? 'text-amber-300' : 'text-slate-100') : 'text-slate-600'}">
+                    ${hasScore ? numVal : '—'}
+                  </span>
+                  <div class="flex items-center gap-0.5 shrink-0">
+                    ${isWin ? '<span title="Daily Leader" class="text-[11px]">👑</span>' : ''}
+                    ${isPR ? '<span title="All-Time Personal Record" class="text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1 py-0.2 rounded font-sans font-bold">PR</span>' : ''}
+                  </div>
+                </div>
+              </div>
+            `;
+          }).join("");
+
+          const gridColsClass = games.length <= 2 ? "grid-cols-2" : "grid-cols-3";
+
+          return `
+            <div class="rounded-xl p-3 border transition ${isSelf ? 'bg-amber-400/[0.06] border-amber-400/40' : 'bg-slate-900/60 border-slate-800'}">
+              <div class="flex items-center justify-between gap-2 mb-2.5">
+                <div class="flex items-center gap-2 min-w-0">
+                  <div class="relative shrink-0">
+                    <img src="${avatarSrc}" alt="${displayName}" class="w-7 h-7 rounded-full object-cover border ${isSelf ? 'border-amber-400 ring-1 ring-amber-400/50' : 'border-slate-700'}" />
+                    ${isSelf ? '<span class="absolute -top-0.5 -right-0.5 w-2 h-2 bg-amber-400 rounded-full border border-slate-950"></span>' : ''}
+                  </div>
+                  <span class="text-sm ${isSelf ? 'text-amber-300 font-bold' : 'text-slate-200 font-semibold'} truncate">${displayName}</span>
+                  ${isSelf ? '<span class="text-[9px] uppercase font-bold text-amber-400/80 bg-amber-400/10 px-1.5 py-0.5 rounded">You</span>' : ''}
+                </div>
+                ${dailyLeadsCount > 0 ? `<span class="text-[10px] font-semibold text-amber-300 bg-amber-500/15 border border-amber-500/30 px-2 py-0.5 rounded-full shrink-0">👑 ${dailyLeadsCount} leading</span>` : ''}
+              </div>
+              <div class="grid ${gridColsClass} gap-2">
+                ${gameTiles}
+              </div>
+            </div>
+          `;
+        }).join("");
+      }
+
+      // 2. Render Streamlined Table View
       header.innerHTML = `
-        <th class="py-2.5">Player</th>
-        ${games.map(([_, g]) => `<th class="py-2.5">${g.name} <span class="text-[10px] text-slate-500 font-normal">(${g.direction === 'high' ? 'High' : 'Low'})</span></th>`).join("")}
+        <th class="py-2.5 pr-2">Player</th>
+        ${games.map(([_, g]) => `
+          <th class="py-2.5 px-2 text-center whitespace-nowrap">
+            <span>${g.name}</span>
+            <span class="text-[10px] text-slate-500 font-mono ml-0.5" title="${g.direction === 'high' ? 'Highest score wins' : 'Lowest score wins'}">${g.direction === 'high' ? '↑' : '↓'}</span>
+          </th>
+        `).join("")}
       `;
 
       tbody.innerHTML = playerIds.map(pId => {
@@ -796,18 +1288,36 @@
 
         const scoreCells = games.map(([gKey, _]) => {
           const val = pScores[gKey];
-          return `<td class="py-2.5 ${val !== undefined ? 'text-amber-300 font-bold' : 'text-slate-600'}">${val !== undefined ? val : '-'}</td>`;
+          const hasScore = val !== undefined && val !== null && val !== "";
+          const numVal = hasScore ? Number(val) : null;
+          const isWin = hasScore && dailyBest[gKey] !== null && numVal === dailyBest[gKey];
+          const prObj = personalRecords[pId]?.[gKey];
+          const isPR = hasScore && prObj && prObj.count >= 1 && prObj.value === numVal;
+
+          if (!hasScore) {
+            return `<td class="py-2.5 px-2 text-center text-slate-600">—</td>`;
+          }
+
+          return `
+            <td class="py-2.5 px-2 text-center whitespace-nowrap">
+              <div class="inline-flex items-center justify-center gap-1 ${isWin ? 'bg-amber-500/15 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-lg font-bold' : 'text-slate-200 font-semibold'}">
+                <span>${numVal}</span>
+                ${isWin ? '<span class="text-[10px]" title="Daily Leader">👑</span>' : ''}
+                ${isPR ? '<span class="text-[9px] bg-rose-500/20 text-rose-300 border border-rose-500/30 px-1 rounded font-sans font-bold" title="All-Time Personal Record">PR</span>' : ''}
+              </div>
+            </td>
+          `;
         }).join("");
 
         return `
           <tr class="${isSelf ? 'bg-amber-400/5' : ''}">
-            <td class="py-2.5 font-sans font-medium text-slate-200">
+            <td class="py-2.5 pr-2 font-sans font-medium text-slate-200">
               <div class="flex items-center gap-2">
                 <div class="relative shrink-0">
                   <img src="${avatarSrc}" alt="${displayName}" class="w-6 h-6 rounded-full object-cover border ${isSelf ? 'border-amber-400 ring-1 ring-amber-400/50' : 'border-slate-700'}" />
                   ${isSelf ? '<span class="absolute -top-0.5 -right-0.5 w-2 h-2 bg-amber-400 rounded-full border border-slate-950"></span>' : ''}
                 </div>
-                <span class="${isSelf ? 'text-amber-300 font-semibold' : ''} truncate max-w-[110px] sm:max-w-none">${displayName}</span>
+                <span class="${isSelf ? 'text-amber-300 font-semibold' : ''} truncate max-w-[100px] sm:max-w-none">${displayName}</span>
               </div>
             </td>
             ${scoreCells}
@@ -827,25 +1337,15 @@
 
         playerIds.forEach(pId => {
           const val = dateScores[pId]?.[gKey];
-          if (val !== undefined && val !== null) {
+          if (val !== undefined && val !== null && val !== "") {
+            const numVal = Number(val);
+            if (isNaN(numVal)) return;
             const name = getPlayerName(pId);
-            if (bestVal === null) {
-              bestVal = val;
+            if (bestVal === null || isBetterScore(numVal, bestVal, g.direction)) {
+              bestVal = numVal;
               winners = [name];
-            } else if (g.direction === "high") {
-              if (val > bestVal) {
-                bestVal = val;
-                winners = [name];
-              } else if (val === bestVal) {
-                winners.push(name);
-              }
-            } else {
-              if (val < bestVal) {
-                bestVal = val;
-                winners = [name];
-              } else if (val === bestVal) {
-                winners.push(name);
-              }
+            } else if (numVal === bestVal) {
+              winners.push(name);
             }
           }
         });
@@ -860,53 +1360,63 @@
       }).join("");
     }
 
-    function renderAnalyticsTable() {
-      const header = document.getElementById("analyticsTableHeader");
-      const tbody = document.getElementById("analyticsTableBody");
-      const games = Object.entries(appState.config.games);
-      const dates = Object.keys(appState.scores);
+    // -------------------------------------------------------------
+    // 5. SEASONS FILTER, ANALYTICS, TRENDS, CONSISTENCY & HALL OF FAME
+    // -------------------------------------------------------------
+    function computePeriodPlayerStats(dates) {
+      const games = Object.entries(appState.config.games || {});
       const playerIds = getPlayerIds();
-
-      header.innerHTML = `
-        <th class="py-2.5">Player</th>
-        <th class="py-2.5 text-amber-400">Total Wins 🥇</th>
-        ${games.map(([_, g]) => `<th class="py-2.5">${g.name} Avg</th>`).join("")}
-      `;
-
       const playerStats = {};
+
       playerIds.forEach(pId => {
-        playerStats[pId] = { totalWins: 0, gameWins: {}, sums: {}, counts: {} };
+        playerStats[pId] = {
+          totalWins: 0,
+          daysPlayed: 0,
+          daysWonAtLeastOne: 0,
+          gamesEntered: 0,
+          currentPlayStreak: 0,
+          bestPlayStreak: 0,
+          currentWinStreak: 0,
+          bestWinStreak: 0,
+          gameWins: {},
+          sums: {},
+          counts: {},
+          values: {},
+          historyByGame: {}
+        };
         games.forEach(([gKey, _]) => {
           playerStats[pId].gameWins[gKey] = 0;
           playerStats[pId].sums[gKey] = 0;
           playerStats[pId].counts[gKey] = 0;
+          playerStats[pId].values[gKey] = [];
+          playerStats[pId].historyByGame[gKey] = [];
         });
       });
 
-      dates.forEach(d => {
+      const sortedDates = [...dates].sort();
+
+      sortedDates.forEach(d => {
         const dScores = appState.scores[d] || {};
+        const playedToday = {};
+        const wonToday = {};
+
         games.forEach(([gKey, g]) => {
           let bVal = null;
           let dayWinners = [];
 
           playerIds.forEach(pId => {
-            const v = dScores[pId]?.[gKey];
-            if (v !== undefined && v !== null) {
-              playerStats[pId].sums[gKey] += v;
-              playerStats[pId].counts[gKey] += 1;
+            const raw = dScores[pId]?.[gKey];
+            if (raw !== undefined && raw !== null && raw !== "") {
+              const v = Number(raw);
+              if (!isNaN(v)) {
+                playedToday[pId] = true;
+                playerStats[pId].gamesEntered += 1;
+                playerStats[pId].sums[gKey] += v;
+                playerStats[pId].counts[gKey] += 1;
+                playerStats[pId].values[gKey].push(v);
+                playerStats[pId].historyByGame[gKey].push({ date: d, value: v });
 
-              if (bVal === null) {
-                bVal = v;
-                dayWinners = [pId];
-              } else if (g.direction === "high") {
-                if (v > bVal) {
-                  bVal = v;
-                  dayWinners = [pId];
-                } else if (v === bVal) {
-                  dayWinners.push(pId);
-                }
-              } else {
-                if (v < bVal) {
+                if (bVal === null || isBetterScore(v, bVal, g.direction)) {
                   bVal = v;
                   dayWinners = [pId];
                 } else if (v === bVal) {
@@ -920,31 +1430,628 @@
             if (playerStats[wId]) {
               playerStats[wId].totalWins += 1;
               playerStats[wId].gameWins[gKey] += 1;
+              wonToday[wId] = true;
             }
           });
         });
+
+        playerIds.forEach(pId => {
+          if (playedToday[pId]) {
+            playerStats[pId].daysPlayed += 1;
+            playerStats[pId].currentPlayStreak += 1;
+            if (playerStats[pId].currentPlayStreak > playerStats[pId].bestPlayStreak) {
+              playerStats[pId].bestPlayStreak = playerStats[pId].currentPlayStreak;
+            }
+          } else {
+            playerStats[pId].currentPlayStreak = 0;
+          }
+
+          if (wonToday[pId]) {
+            playerStats[pId].daysWonAtLeastOne += 1;
+            playerStats[pId].currentWinStreak += 1;
+            if (playerStats[pId].currentWinStreak > playerStats[pId].bestWinStreak) {
+              playerStats[pId].bestWinStreak = playerStats[pId].currentWinStreak;
+            }
+          } else {
+            playerStats[pId].currentWinStreak = 0;
+          }
+        });
       });
+
+      return playerStats;
+    }
+
+    function renderSeasonControls() {
+      const mode = appState.seasonMode;
+      document.querySelectorAll(".season-mode-btn").forEach(btn => {
+        const isActive = btn.dataset.seasonMode === mode;
+        btn.className = isActive
+          ? "season-mode-btn px-3 py-1.5 rounded-lg transition cursor-pointer bg-amber-500 text-slate-950 font-bold"
+          : "season-mode-btn px-3 py-1.5 rounded-lg transition cursor-pointer text-slate-400 hover:text-white";
+      });
+
+      const stepperRow = document.getElementById("seasonStepperRow");
+      const periodLabel = document.getElementById("seasonPeriodLabel");
+      const rangeSubtext = document.getElementById("seasonRangeSubtext");
+      const tableHeading = document.getElementById("analyticsTableHeading");
+      const historyHeading = document.getElementById("historyTableHeading");
+      const activeDaysBadge = document.getElementById("analyticsActiveDaysBadge");
+      const champBanner = document.getElementById("seasonChampionBanner");
+
+      const dates = getSeasonFilteredDates();
+      const stats = computePeriodPlayerStats(dates);
+      const playerIds = getPlayerIds();
+
+      let periodTitle = "All-Time";
+      if (mode === "week") {
+        const { label } = getWeekBounds(appState.seasonRefDate);
+        periodTitle = `Week of ${label}`;
+        stepperRow?.classList.remove("hidden");
+        if (periodLabel) periodLabel.innerText = label;
+        if (rangeSubtext) rangeSubtext.innerText = `Weekly Season (${label})`;
+        if (tableHeading) tableHeading.innerText = "🏆 Weekly Season Performance & Averages";
+        if (historyHeading) historyHeading.innerText = "📅 Weekly Winners Log (Click row to inspect)";
+      } else if (mode === "month") {
+        const { label } = getMonthBounds(appState.seasonRefDate);
+        periodTitle = `${label} Season`;
+        stepperRow?.classList.remove("hidden");
+        if (periodLabel) periodLabel.innerText = label;
+        if (rangeSubtext) rangeSubtext.innerText = `Monthly Season (${label})`;
+        if (tableHeading) tableHeading.innerText = `🏆 ${label} Performance & Averages`;
+        if (historyHeading) historyHeading.innerText = `📅 ${label} Winners Log (Click row to inspect)`;
+      } else {
+        stepperRow?.classList.add("hidden");
+        if (rangeSubtext) rangeSubtext.innerText = "Viewing all recorded league history";
+        if (tableHeading) tableHeading.innerText = "🏆 All-Time Group Performance & Averages";
+        if (historyHeading) historyHeading.innerText = "📅 Daily Winners Log (Last 30 Days • Click row to inspect)";
+      }
+
+      if (activeDaysBadge) {
+        activeDaysBadge.innerText = `${dates.length} active ${dates.length === 1 ? "day" : "days"}`;
+      }
+
+      if (champBanner) {
+        let topWins = 0;
+        let leaders = [];
+        playerIds.forEach(pId => {
+          const w = stats[pId]?.totalWins || 0;
+          if (w > 0) {
+            if (w > topWins) {
+              topWins = w;
+              leaders = [getPlayerName(pId)];
+            } else if (w === topWins) {
+              leaders.push(getPlayerName(pId));
+            }
+          }
+        });
+
+        if (leaders.length > 0) {
+          champBanner.innerHTML = `
+            <div class="flex items-center gap-2 min-w-0">
+              <span class="text-base shrink-0">👑</span>
+              <div class="truncate">
+                <span class="text-slate-400 font-medium">${mode === 'all' ? 'All-Time Leader' : 'Season Leader'}:</span>
+                <span class="text-amber-300 font-bold ml-1">${leaders.join(", ")}</span>
+              </div>
+            </div>
+            <span class="font-mono font-bold text-amber-400 bg-amber-400/10 border border-amber-400/30 px-2.5 py-0.5 rounded-full shrink-0">${topWins} ${topWins === 1 ? 'win' : 'wins'}</span>
+          `;
+        } else {
+          champBanner.innerHTML = `
+            <span class="text-slate-400 italic">No scores recorded for ${periodTitle} yet.</span>
+            <span class="text-[11px] text-slate-500 font-mono">0 wins</span>
+          `;
+        }
+      }
+    }
+
+    function renderAnalyticsTable() {
+      const header = document.getElementById("analyticsTableHeader");
+      const tbody = document.getElementById("analyticsTableBody");
+      const games = Object.entries(appState.config.games);
+      const dates = getSeasonFilteredDates();
+      const playerIds = getPlayerIds();
+
+      header.innerHTML = `
+        <th class="py-2.5 pr-2">Player</th>
+        <th class="py-2.5 px-2 text-amber-400">Total Wins 🥇</th>
+        ${games.map(([_, g]) => `<th class="py-2.5 px-2">${g.name} Avg</th>`).join("")}
+      `;
+
+      const playerStats = computePeriodPlayerStats(dates);
 
       tbody.innerHTML = playerIds.map(pId => {
         const s = playerStats[pId];
         const isSelf = pId === appState.activePlayer;
 
         const avgCells = games.map(([gKey, _]) => {
-          if (!s || s.counts[gKey] === 0) return `<td class="py-2.5 text-slate-600">-</td>`;
+          if (!s || s.counts[gKey] === 0) return `<td class="py-2.5 px-2 text-slate-600">—</td>`;
           const avg = (s.sums[gKey] / s.counts[gKey]).toFixed(1);
-          return `<td class="py-2.5 text-slate-300 font-mono">${avg} <span class="text-[10px] text-slate-500">(${s.gameWins[gKey]}W)</span></td>`;
+          return `<td class="py-2.5 px-2 text-slate-200 font-mono whitespace-nowrap">${avg} <span class="text-[10px] text-amber-400/80">(${s.gameWins[gKey]}W)</span></td>`;
         }).join("");
 
         return `
           <tr class="${isSelf ? 'bg-amber-400/5' : ''}">
-            <td class="py-2.5 font-sans font-medium text-slate-200">
+            <td class="py-2.5 pr-2 font-sans font-medium text-slate-200">
               <div class="flex items-center gap-2">
                 <img src="${getPlayerAvatar(pId)}" alt="${getPlayerName(pId)}" class="w-5 h-5 rounded-full object-cover border border-slate-700 shrink-0" />
                 <span class="${isSelf ? 'text-amber-300 font-semibold' : ''}">${getPlayerName(pId)}</span>
               </div>
             </td>
-            <td class="py-2.5 text-amber-400 font-bold text-sm">${s ? s.totalWins : 0} wins</td>
+            <td class="py-2.5 px-2 text-amber-400 font-bold text-sm whitespace-nowrap">${s ? s.totalWins : 0} wins</td>
             ${avgCells}
+          </tr>
+        `;
+      }).join("");
+    }
+
+    // -------------------------------------------------------------
+    // SCORE TREND SPARKLINES & INTERACTIVE SVG CHART
+    // -------------------------------------------------------------
+    window.selectTrendGame = function(gKey) {
+      appState.selectedTrendGame = gKey;
+      renderTrendsSection();
+    };
+
+    window.toggleTrendPlayer = function(pId) {
+      appState.hiddenTrendPlayers[pId] = !appState.hiddenTrendPlayers[pId];
+      renderTrendsSection();
+    };
+
+    function buildSparklineSvg(values, color, direction) {
+      if (!values || values.length === 0) {
+        return `<div class="h-10 flex items-center justify-center text-[10px] text-slate-600 font-mono">No data in period</div>`;
+      }
+      const w = 160;
+      const h = 40;
+      const padX = 6;
+      const padY = 6;
+
+      if (values.length === 1) {
+        return `
+          <svg viewBox="0 0 ${w} ${h}" class="w-full h-10 overflow-visible">
+            <line x1="${padX}" y1="${h / 2}" x2="${w - padX}" y2="${h / 2}" stroke="${color}" stroke-opacity="0.35" stroke-width="1.5" stroke-dasharray="3 3" />
+            <circle cx="${w / 2}" cy="${h / 2}" r="3.5" fill="${color}" />
+          </svg>
+        `;
+      }
+
+      const minV = Math.min(...values);
+      const maxV = Math.max(...values);
+      const range = maxV - minV || 1;
+
+      const pts = values.map((v, idx) => {
+        const x = padX + (idx / (values.length - 1)) * (w - padX * 2);
+        const norm = direction === "high" ? (v - minV) / range : (maxV - v) / range;
+        const y = h - padY - norm * (h - padY * 2);
+        return { x: Number(x.toFixed(1)), y: Number(y.toFixed(1)), v };
+      });
+
+      const polylinePoints = pts.map(p => `${p.x},${p.y}`).join(" ");
+      const areaPoints = `${pts[0].x},${h - 2} ${polylinePoints} ${pts[pts.length - 1].x},${h - 2}`;
+      const last = pts[pts.length - 1];
+
+      return `
+        <svg viewBox="0 0 ${w} ${h}" class="w-full h-10 overflow-visible">
+          <polygon points="${areaPoints}" fill="${color}" fill-opacity="0.12" />
+          <polyline fill="none" stroke="${color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" points="${polylinePoints}" />
+          <circle cx="${last.x}" cy="${last.y}" r="3" fill="${color}" />
+        </svg>
+      `;
+    }
+
+    function renderTrendsSection() {
+      const tabsContainer = document.getElementById("trendGameTabs");
+      const chartContainer = document.getElementById("trendChartContainer");
+      const sparklinesGrid = document.getElementById("playerSparklinesGrid");
+      if (!tabsContainer || !chartContainer || !sparklinesGrid) return;
+
+      const games = Object.entries(appState.config.games || {});
+      if (games.length === 0) {
+        tabsContainer.innerHTML = "";
+        chartContainer.innerHTML = `<p class="text-xs text-slate-500 text-center py-6">No games configured.</p>`;
+        sparklinesGrid.innerHTML = "";
+        return;
+      }
+
+      if (!appState.selectedTrendGame || !appState.config.games[appState.selectedTrendGame]) {
+        appState.selectedTrendGame = games[0][0];
+      }
+
+      const activeGKey = appState.selectedTrendGame;
+      const activeGame = appState.config.games[activeGKey];
+
+      // 1. Game Tabs
+      tabsContainer.innerHTML = games.map(([gKey, g]) => {
+        const isSelected = gKey === activeGKey;
+        return `
+          <button type="button" onclick="selectTrendGame('${gKey}')"
+                  class="px-3 py-1 rounded-lg font-semibold transition cursor-pointer ${isSelected ? 'bg-amber-500 text-slate-950 font-bold' : 'text-slate-400 hover:text-white'}">
+            ${g.name}
+          </button>
+        `;
+      }).join("");
+
+      const seasonDates = getSeasonFilteredDates();
+      // Keep chart readable by taking up to the last 20 active dates in All-Time mode
+      const chartDates = appState.seasonMode === "all" ? seasonDates.slice(-20) : seasonDates;
+      const playerIds = getPlayerIds();
+      const stats = computePeriodPlayerStats(seasonDates);
+
+      // Gather all values for activeGKey across chartDates
+      const allChartValues = [];
+      chartDates.forEach(d => {
+        playerIds.forEach(pId => {
+          if (appState.hiddenTrendPlayers[pId]) return;
+          const raw = appState.scores[d]?.[pId]?.[activeGKey];
+          if (raw !== undefined && raw !== null && raw !== "" && !isNaN(Number(raw))) {
+            allChartValues.push(Number(raw));
+          }
+        });
+      });
+
+      const legendHtml = `
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-3">
+          <div class="flex flex-wrap items-center gap-1.5">
+            ${playerIds.map(pId => {
+              const hidden = !!appState.hiddenTrendPlayers[pId];
+              const color = getPlayerColor(pId);
+              return `
+                <button type="button" onclick="toggleTrendPlayer('${pId}')"
+                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold border transition cursor-pointer ${hidden ? 'bg-slate-950/50 border-slate-800 text-slate-600 opacity-60' : 'bg-slate-950 border-slate-700 text-slate-200'}">
+                  <span class="w-2.5 h-2.5 rounded-full shrink-0" style="background:${color}"></span>
+                  <span>${getPlayerName(pId)}</span>
+                </button>
+              `;
+            }).join("")}
+          </div>
+          <span class="text-[10px] text-slate-400 font-mono">
+            ${activeGame.direction === 'high' ? '↑ Higher score = Better' : '↓ Lower score = Better (plotted higher)'}
+          </span>
+        </div>
+      `;
+
+      if (chartDates.length === 0 || allChartValues.length === 0) {
+        chartContainer.innerHTML = `
+          ${legendHtml}
+          <div class="py-8 text-center text-xs text-slate-500">No ${activeGame.name} scores recorded in this period yet.</div>
+        `;
+      } else {
+        const svgW = 680;
+        const svgH = 220;
+        const padL = 44;
+        const padR = 20;
+        const padT = 18;
+        const padB = 30;
+        const plotW = svgW - padL - padR;
+        const plotH = svgH - padT - padB;
+
+        let minV = Math.min(...allChartValues);
+        let maxV = Math.max(...allChartValues);
+        if (minV === maxV) {
+          minV = Math.max(0, minV - 5);
+          maxV = maxV + 5;
+        }
+        const range = maxV - minV || 1;
+        const avgV = allChartValues.reduce((a, b) => a + b, 0) / allChartValues.length;
+
+        const valToY = (v) => {
+          const norm = activeGame.direction === "high" ? (v - minV) / range : (maxV - v) / range;
+          return Number((padT + (1 - norm) * plotH).toFixed(1));
+        };
+
+        const idxToX = (idx) => {
+          if (chartDates.length === 1) return padL + plotW / 2;
+          return Number((padL + (idx / (chartDates.length - 1)) * plotW).toFixed(1));
+        };
+
+        const topLabelVal = activeGame.direction === "high" ? maxV : minV;
+        const midLabelVal = ((maxV + minV) / 2).toFixed(activeGame.step < 1 ? 1 : 0);
+        const botLabelVal = activeGame.direction === "high" ? minV : maxV;
+        const avgY = valToY(avgV);
+
+        // X-axis date labels (first, middle, last)
+        const xLabelIndices = chartDates.length <= 6
+          ? chartDates.map((_, i) => i)
+          : [0, Math.floor((chartDates.length - 1) / 2), chartDates.length - 1];
+
+        const xLabelsSvg = xLabelIndices.map(i => `
+          <text x="${idxToX(i)}" y="${svgH - 8}" fill="#64748b" font-size="10" font-family="monospace" text-anchor="middle">
+            ${formatShortDate(chartDates[i])}
+          </text>
+        `).join("");
+
+        const playerLinesSvg = playerIds.map(pId => {
+          if (appState.hiddenTrendPlayers[pId]) return "";
+          const color = getPlayerColor(pId);
+          const pName = getPlayerName(pId);
+          const pts = [];
+
+          chartDates.forEach((d, idx) => {
+            const raw = appState.scores[d]?.[pId]?.[activeGKey];
+            if (raw !== undefined && raw !== null && raw !== "" && !isNaN(Number(raw))) {
+              const v = Number(raw);
+              pts.push({ x: idxToX(idx), y: valToY(v), v, date: d });
+            }
+          });
+
+          if (pts.length === 0) return "";
+
+          const polyline = pts.length > 1
+            ? `<polyline fill="none" stroke="${color}" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" points="${pts.map(p => `${p.x},${p.y}`).join(" ")}" />`
+            : "";
+
+          const circles = pts.map(p => `
+            <circle cx="${p.x}" cy="${p.y}" r="4" fill="${color}" stroke="#020617" stroke-width="1.5" class="cursor-pointer" onclick="inspectDate('${p.date}')">
+              <title>${pName} • ${p.date}: ${p.v}</title>
+            </circle>
+          `).join("");
+
+          return `${polyline}${circles}`;
+        }).join("");
+
+        chartContainer.innerHTML = `
+          ${legendHtml}
+          <div class="w-full overflow-x-auto">
+            <svg viewBox="0 0 ${svgW} ${svgH}" class="w-full h-48 sm:h-56 select-none">
+              <!-- Horizontal Grid Lines -->
+              <line x1="${padL}" y1="${padT}" x2="${svgW - padR}" y2="${padT}" stroke="#1e293b" stroke-width="1" />
+              <line x1="${padL}" y1="${padT + plotH / 2}" x2="${svgW - padR}" y2="${padT + plotH / 2}" stroke="#1e293b" stroke-width="1" />
+              <line x1="${padL}" y1="${padT + plotH}" x2="${svgW - padR}" y2="${padT + plotH}" stroke="#1e293b" stroke-width="1" />
+
+              <!-- League Average Reference Line -->
+              <line x1="${padL}" y1="${avgY}" x2="${svgW - padR}" y2="${avgY}" stroke="#f59e0b" stroke-opacity="0.35" stroke-width="1.2" stroke-dasharray="4 4" />
+              <text x="${svgW - padR - 4}" y="${Math.max(padT + 10, avgY - 5)}" fill="#f59e0b" fill-opacity="0.7" font-size="9" font-family="monospace" text-anchor="end">
+                Avg ${avgV.toFixed(1)}
+              </text>
+
+              <!-- Y-Axis Labels -->
+              <text x="${padL - 8}" y="${padT + 4}" fill="#94a3b8" font-size="10" font-family="monospace" text-anchor="end">${topLabelVal}</text>
+              <text x="${padL - 8}" y="${padT + plotH / 2 + 3}" fill="#64748b" font-size="10" font-family="monospace" text-anchor="end">${midLabelVal}</text>
+              <text x="${padL - 8}" y="${padT + plotH + 3}" fill="#94a3b8" font-size="10" font-family="monospace" text-anchor="end">${botLabelVal}</text>
+
+              <!-- X-Axis Date Labels -->
+              ${xLabelsSvg}
+
+              <!-- Player Lines & Data Points -->
+              ${playerLinesSvg}
+            </svg>
+          </div>
+          <p class="text-[10px] text-slate-500 mt-1 text-right">Tip: Tap any data point to inspect that day, or tap player pills above to filter lines.</p>
+        `;
+      }
+
+      // 2. Per-Player Sparklines & Form Cards for activeGKey
+      sparklinesGrid.innerHTML = playerIds.map(pId => {
+        const pStats = stats[pId];
+        const values = pStats?.values[activeGKey] || [];
+        const color = getPlayerColor(pId);
+        const count = values.length;
+        const avg = count > 0 ? (values.reduce((a, b) => a + b, 0) / count).toFixed(1) : "—";
+        const best = count > 0
+          ? (activeGame.direction === "high" ? Math.max(...values) : Math.min(...values))
+          : "—";
+
+        // Recent Form indicator (last 3 entries vs overall period average)
+        let formBadge = `<span class="text-[10px] text-slate-500 font-mono">Need 3+ games</span>`;
+        if (count >= 3) {
+          const overallAvg = values.reduce((a, b) => a + b, 0) / count;
+          const recent3 = values.slice(-3);
+          const recentAvg = recent3.reduce((a, b) => a + b, 0) / recent3.length;
+          const diffRatio = overallAvg !== 0 ? Math.abs(recentAvg - overallAvg) / Math.abs(overallAvg) : 0;
+
+          if (diffRatio < 0.04) {
+            formBadge = `<span class="text-[10px] bg-slate-800 text-slate-300 px-2 py-0.5 rounded-full font-semibold">→ Steady Form</span>`;
+          } else {
+            const improving = activeGame.direction === "high" ? recentAvg > overallAvg : recentAvg < overallAvg;
+            formBadge = improving
+              ? `<span class="text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">↗ Heating Up</span>`
+              : `<span class="text-[10px] bg-amber-500/15 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full font-semibold">↘ Cooling Off</span>`;
+          }
+        }
+
+        return `
+          <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3 flex flex-col justify-between gap-2">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <img src="${getPlayerAvatar(pId)}" alt="${getPlayerName(pId)}" class="w-6 h-6 rounded-full object-cover border border-slate-700 shrink-0" />
+                <span class="text-xs font-bold text-slate-200 truncate">${getPlayerName(pId)}</span>
+              </div>
+              ${formBadge}
+            </div>
+            <div class="my-1">
+              ${buildSparklineSvg(values.slice(-14), color, activeGame.direction)}
+            </div>
+            <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 pt-1 border-t border-slate-800/80">
+              <span>Avg: <strong class="text-slate-200">${avg}</strong></span>
+              <span>Best: <strong class="text-amber-400">${best}</strong></span>
+              <span>Played: <strong class="text-slate-300">${count}</strong></span>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // -------------------------------------------------------------
+    // CONSISTENCY & PARTICIPATION STATS
+    // -------------------------------------------------------------
+    function renderConsistencySection() {
+      const container = document.getElementById("consistencyStatsContainer");
+      if (!container) return;
+
+      const dates = getSeasonFilteredDates();
+      const totalDays = dates.length;
+      const games = Object.entries(appState.config.games || {});
+      const playerIds = getPlayerIds();
+      const stats = computePeriodPlayerStats(dates);
+
+      container.innerHTML = playerIds.map(pId => {
+        const s = stats[pId];
+        const isSelf = pId === appState.activePlayer;
+        const participationPct = totalDays > 0 ? Math.round((s.daysPlayed / totalDays) * 100) : 0;
+        const winEfficiencyPct = s.gamesEntered > 0 ? Math.round((s.totalWins / s.gamesEntered) * 100) : 0;
+
+        // Calculate standard deviation (±σ) and normalized coefficient of variation per game
+        const gameSpreads = [];
+        const cvList = [];
+
+        games.forEach(([gKey, g]) => {
+          const vals = s.values[gKey] || [];
+          if (vals.length >= 2) {
+            const mean = vals.reduce((a, b) => a + b, 0) / vals.length;
+            const variance = vals.reduce((acc, v) => acc + Math.pow(v - mean, 2), 0) / vals.length;
+            const stdDev = Math.sqrt(variance);
+            const span = (g.max - g.min) || mean || 1;
+            cvList.push(stdDev / span);
+            gameSpreads.push(`${g.name}: ±${stdDev.toFixed(1)}`);
+          } else if (vals.length === 1) {
+            gameSpreads.push(`${g.name}: ±0.0`);
+          }
+        });
+
+        let consistencyBadge = `<span class="text-[10px] bg-slate-800 text-slate-400 px-2 py-0.5 rounded-full">Need 2+ days</span>`;
+        if (cvList.length > 0) {
+          const avgCv = cvList.reduce((a, b) => a + b, 0) / cvList.length;
+          if (avgCv < 0.08) {
+            consistencyBadge = `<span class="text-[10px] bg-emerald-500/15 text-emerald-300 border border-emerald-500/30 px-2 py-0.5 rounded-full font-semibold">🎯 Laser Consistent</span>`;
+          } else if (avgCv < 0.16) {
+            consistencyBadge = `<span class="text-[10px] bg-blue-500/15 text-blue-300 border border-blue-500/30 px-2 py-0.5 rounded-full font-semibold">⚖️ Steady Hand</span>`;
+          } else {
+            consistencyBadge = `<span class="text-[10px] bg-purple-500/15 text-purple-300 border border-purple-500/30 px-2 py-0.5 rounded-full font-semibold">⚡ High Variance</span>`;
+          }
+        }
+
+        return `
+          <div class="bg-slate-900/65 border ${isSelf ? 'border-amber-400/40' : 'border-slate-800'} rounded-xl p-3.5 space-y-3">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <img src="${getPlayerAvatar(pId)}" alt="${getPlayerName(pId)}" class="w-7 h-7 rounded-full object-cover border border-slate-700 shrink-0" />
+                <div>
+                  <div class="text-xs font-bold ${isSelf ? 'text-amber-300' : 'text-slate-100'} truncate">${getPlayerName(pId)}</div>
+                  <div class="text-[10px] text-slate-400 font-mono">${s.daysPlayed}/${totalDays} active days (${participationPct}%)</div>
+                </div>
+              </div>
+              ${consistencyBadge}
+            </div>
+
+            <!-- Participation Progress Bar -->
+            <div class="w-full bg-slate-950 h-2 rounded-full overflow-hidden border border-slate-800">
+              <div class="h-full bg-amber-400 rounded-full transition-all duration-300" style="width: ${participationPct}%"></div>
+            </div>
+
+            <!-- Key Metrics Grid -->
+            <div class="grid grid-cols-3 gap-2 text-center bg-slate-950/70 border border-slate-800/80 rounded-lg p-2 font-mono">
+              <div>
+                <div class="text-[9px] font-sans uppercase text-slate-500">Win Rate</div>
+                <div class="text-xs font-bold text-amber-400">${winEfficiencyPct}%</div>
+                <div class="text-[9px] text-slate-500">${s.totalWins}/${s.gamesEntered}</div>
+              </div>
+              <div>
+                <div class="text-[9px] font-sans uppercase text-slate-500">Play Streak</div>
+                <div class="text-xs font-bold text-emerald-400">${s.currentPlayStreak}d</div>
+                <div class="text-[9px] text-slate-500">Best: ${s.bestPlayStreak}d</div>
+              </div>
+              <div>
+                <div class="text-[9px] font-sans uppercase text-slate-500">Win Streak</div>
+                <div class="text-xs font-bold text-rose-400">🔥 ${s.currentWinStreak}d</div>
+                <div class="text-[9px] text-slate-500">Best: ${s.bestWinStreak}d</div>
+              </div>
+            </div>
+
+            <!-- Spread (±σ) Breakdown -->
+            <div class="text-[10px] text-slate-400 font-mono flex flex-wrap gap-x-3 gap-y-1 pt-0.5">
+              ${gameSpreads.length > 0 ? gameSpreads.map(sp => `<span>${sp}</span>`).join(" • ") : '<span class="text-slate-600 font-sans italic">Log 2+ days to calculate spread (±σ)</span>'}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // -------------------------------------------------------------
+    // PERSONAL RECORDS (PRs) & HALL OF FAME (NO WALL OF SHAME)
+    // -------------------------------------------------------------
+    function renderHallOfFameAndPRs() {
+      const hofContainer = document.getElementById("hallOfFameCards");
+      const prHeader = document.getElementById("prTableHeader");
+      const prBody = document.getElementById("prTableBody");
+      if (!hofContainer || !prHeader || !prBody) return;
+
+      const games = Object.entries(appState.config.games || {});
+      const playerIds = getPlayerIds();
+      const { leagueRecords, personalRecords } = computeAllTimeRecords();
+
+      // 1. All-Time League Records Cards
+      hofContainer.innerHTML = games.map(([gKey, g]) => {
+        const rec = leagueRecords[gKey];
+        if (!rec || rec.value === null || rec.holders.length === 0) {
+          return `
+            <div class="bg-slate-900/60 border border-slate-800 rounded-xl p-3.5">
+              <div class="text-[10px] font-bold uppercase tracking-wider text-slate-400">${g.name}</div>
+              <div class="text-xs text-slate-500 italic mt-2">No scores recorded yet</div>
+            </div>
+          `;
+        }
+
+        const holdersHtml = rec.holders.map(h => `
+          <button type="button" onclick="inspectDate('${h.date}')"
+                  class="inline-flex items-center gap-1.5 bg-slate-950/90 hover:bg-slate-900 border border-slate-800 px-2 py-1 rounded-lg text-xs transition cursor-pointer">
+            <img src="${getPlayerAvatar(h.pId)}" alt="${getPlayerName(h.pId)}" class="w-4 h-4 rounded-full object-cover" />
+            <span class="font-semibold text-slate-200">${getPlayerName(h.pId)}</span>
+            <span class="text-[10px] text-slate-500 font-mono">(${formatShortDate(h.date)})</span>
+          </button>
+        `).join("");
+
+        return `
+          <div class="bg-gradient-to-b from-amber-500/10 to-slate-900/70 border border-amber-500/30 rounded-xl p-3.5 flex flex-col justify-between gap-2">
+            <div>
+              <div class="flex items-center justify-between gap-1">
+                <span class="text-[10px] font-bold uppercase tracking-wider text-amber-300/90">${g.name}</span>
+                <span class="text-[10px] text-slate-400 font-mono">${g.direction === 'high' ? 'Highest ↑' : 'Lowest ↓'}</span>
+              </div>
+              <div class="text-2xl font-black font-mono text-amber-400 mt-1 flex items-baseline gap-1.5">
+                <span>🏆 ${rec.value}</span>
+              </div>
+            </div>
+            <div class="flex flex-wrap gap-1.5 pt-1">
+              ${holdersHtml}
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      // 2. Player Personal Records (PRs) Table
+      prHeader.innerHTML = `
+        <th class="py-2.5 pr-2">Player</th>
+        ${games.map(([_, g]) => `<th class="py-2.5 px-2">${g.name} PR</th>`).join("")}
+      `;
+
+      prBody.innerHTML = playerIds.map(pId => {
+        const isSelf = pId === appState.activePlayer;
+        const cells = games.map(([gKey, _]) => {
+          const pr = personalRecords[pId]?.[gKey];
+          if (!pr || pr.value === null) {
+            return `<td class="py-2.5 px-2 text-slate-600">—</td>`;
+          }
+          return `
+            <td class="py-2.5 px-2 whitespace-nowrap">
+              <div class="flex items-center gap-1.5">
+                <span class="font-bold ${pr.isLeagueRecord ? 'text-amber-300' : 'text-slate-200'}">${pr.value}</span>
+                ${pr.isLeagueRecord ? '<span class="text-[9px] bg-amber-500/20 text-amber-300 border border-amber-500/30 px-1.5 py-0.2 rounded font-sans font-bold" title="All-Time League Record">👑 REC</span>' : ''}
+                ${pr.latestDate ? `<button type="button" onclick="inspectDate('${pr.latestDate}')" class="text-[10px] text-slate-500 hover:text-amber-400 underline cursor-pointer">${formatShortDate(pr.latestDate)}</button>` : ''}
+              </div>
+            </td>
+          `;
+        }).join("");
+
+        return `
+          <tr class="${isSelf ? 'bg-amber-400/5' : ''}">
+            <td class="py-2.5 pr-2 font-sans font-medium text-slate-200">
+              <div class="flex items-center gap-2">
+                <img src="${getPlayerAvatar(pId)}" alt="${getPlayerName(pId)}" class="w-5 h-5 rounded-full object-cover border border-slate-700 shrink-0" />
+                <span class="${isSelf ? 'text-amber-300 font-semibold' : ''}">${getPlayerName(pId)}</span>
+              </div>
+            </td>
+            ${cells}
           </tr>
         `;
       }).join("");
@@ -954,16 +2061,17 @@
       const header = document.getElementById("historyTableHeader");
       const tbody = document.getElementById("historyTableBody");
       const games = Object.entries(appState.config.games);
-      const dates = Object.keys(appState.scores).sort().reverse().slice(0, 30);
+      const filteredDates = getSeasonFilteredDates().sort().reverse();
+      const dates = appState.seasonMode === "all" ? filteredDates.slice(0, 30) : filteredDates;
       const playerIds = getPlayerIds();
 
       header.innerHTML = `
-        <th class="py-2">Date</th>
-        ${games.map(([_, g]) => `<th class="py-2">${g.name}</th>`).join("")}
+        <th class="py-2 pr-2">Date</th>
+        ${games.map(([_, g]) => `<th class="py-2 px-2">${g.name}</th>`).join("")}
       `;
 
       if (dates.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="${games.length + 1}" class="py-4 text-center text-xs text-slate-500">No recorded dates yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="${games.length + 1}" class="py-4 text-center text-xs text-slate-500">No recorded dates in this period yet.</td></tr>`;
         return;
       }
 
@@ -974,22 +2082,24 @@
           let bVal = null;
           let w = [];
           playerIds.forEach(pId => {
-            const v = dScores[pId]?.[gKey];
-            if (v !== undefined && v !== null) {
+            const raw = dScores[pId]?.[gKey];
+            if (raw !== undefined && raw !== null && raw !== "") {
+              const v = Number(raw);
+              if (isNaN(v)) return;
               const name = getPlayerName(pId);
-              if (bVal === null || (g.direction === "high" ? v > bVal : v < bVal)) {
+              if (bVal === null || isBetterScore(v, bVal, g.direction)) {
                 bVal = v; w = [name];
               } else if (v === bVal) {
                 w.push(name);
               }
             }
           });
-          return `<td class="py-2.5 text-xs text-slate-300">${w.length ? `${w.join(", ")} (${bVal})` : '-'}</td>`;
+          return `<td class="py-2.5 px-2 text-xs text-slate-300">${w.length ? `${w.join(", ")} <span class="text-amber-400 font-mono">(${bVal})</span>` : '—'}</td>`;
         }).join("");
 
         return `
-          <tr class="hover:bg-slate-900/50 cursor-pointer" onclick="appState.date='${d}'; document.getElementById('currentDateInput').value='${d}'; renderAll();">
-            <td class="py-2.5 font-mono text-xs text-amber-400 font-semibold">${d}</td>
+          <tr class="hover:bg-slate-900/50 cursor-pointer transition" onclick="inspectDate('${d}')">
+            <td class="py-2.5 pr-2 font-mono text-xs text-amber-400 font-semibold whitespace-nowrap">${d}</td>
             ${winnerCells}
           </tr>
         `;
