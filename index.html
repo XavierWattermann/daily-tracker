@@ -44,11 +44,11 @@
   <!-- MAIN APP CONTAINER -->
   <div id="appContainer" class="hidden max-w-4xl mx-auto px-4 pt-4 space-y-5">
     
-    <!-- ADMIN ANNOUNCEMENT BANNER (Conditionally rendered) -->
+    <!-- ADMIN ANNOUNCEMENT BANNER -->
     <div id="adminBanner" class="hidden glass border border-amber-500/40 bg-gradient-to-r from-amber-500/10 via-amber-400/5 to-transparent rounded-2xl p-4 text-amber-200 text-xs sm:text-sm flex items-start gap-3 shadow-lg">
       <span class="text-lg shrink-0">📢</span>
       <div class="flex-1 leading-relaxed">
-        <span class="font-bold text-amber-400 uppercase tracking-wider text-[10px] block mb-0.5">League Notice</span>
+        <span class="font-bold text-amber-400 uppercase tracking-wider text-[10px] block mb-0.5">Updates!</span>
         <span id="adminBannerText"></span>
       </div>
     </div>
@@ -57,7 +57,7 @@
     <header class="glass border border-slate-800 rounded-2xl p-5 flex flex-wrap items-center justify-between gap-4">
       <div>
         <h1 class="text-2xl font-black tracking-tight text-white flex items-center gap-2">
-          🏆 Daily League
+          🏆 The Ultimate Daily Game Tracker 
         </h1>
         <p id="headerGamesSubtext" class="text-xs text-slate-400">Loading games...</p>
       </div>
@@ -140,7 +140,7 @@
       <!-- Daily Trash Talk & Banter Section -->
       <div class="glass border border-slate-800 rounded-2xl p-5 space-y-4">
         <div class="flex items-center justify-between">
-          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Daily Trash Talk & Banter</h3>
+          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Comments</h3>
           <span class="text-[10px] text-slate-500">Tap photos to zoom</span>
         </div>
 
@@ -150,14 +150,12 @@
 
         <!-- Comment Input Box with Image Attachment -->
         <form id="commentForm" class="space-y-3 pt-3 border-t border-slate-800">
-          <!-- Thumbnail preview container before sending -->
           <div id="commentImagePreviewContainer" class="hidden relative inline-block">
             <img id="commentImagePreview" src="" alt="Selected Preview" class="w-16 h-16 rounded-xl object-cover border border-amber-400/80 shadow-md" />
             <button type="button" id="removeCommentImageBtn" class="absolute -top-1.5 -right-1.5 bg-rose-500 hover:bg-rose-400 text-white rounded-full w-5 h-5 text-[10px] flex items-center justify-center font-bold shadow cursor-pointer">✕</button>
           </div>
 
           <div class="flex items-center gap-2">
-            <!-- Hidden file input -->
             <input type="file" id="commentImageFileInput" accept="image/*" class="hidden" />
             <button type="button" id="triggerCommentImageBtn" title="Attach Photo" class="bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300 p-2.5 rounded-xl transition cursor-pointer flex items-center justify-center shrink-0">
               📷
@@ -209,21 +207,19 @@
 
     <!-- TAB 3: SETTINGS -->
     <section id="configTab" class="hidden glass border border-slate-800 rounded-2xl p-5 space-y-8">
-      
-      <!-- Player Profiles & Avatar Uploads -->
       <div>
         <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400">Player Profiles & Avatars</h3>
+          <h3 id="profileSectionHeading" class="text-sm font-bold uppercase tracking-wider text-slate-400">Your Profile & Avatar</h3>
           <span class="text-[10px] text-slate-500">Tap avatar circle to upload photo</span>
         </div>
 
         <div id="playerProfilesConfig" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <!-- Dynamically generated with avatar uploader -->
+          <!-- Dynamically generated according to permissions -->
         </div>
 
         <div class="flex items-center gap-3 mt-4">
           <button id="savePlayerNamesBtn" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-2 rounded-lg transition cursor-pointer active:scale-95">
-            Save Names
+            Save Profile Changes
           </button>
           <span id="playerSaveStatus" class="text-xs text-emerald-400 font-semibold hidden">✓ Profiles Saved</span>
         </div>
@@ -234,7 +230,7 @@
         <div class="flex items-center justify-between">
           <div>
             <h3 class="text-sm font-bold uppercase tracking-wider text-amber-400 flex items-center gap-2">
-              👑 Admin Settings (Player 1 Exclusive -- don't mess with this pls)
+              👑 Admin Settings (Player 1 Exclusive)
             </h3>
             <p class="text-xs text-slate-400">Manage announcements, players, and games.</p>
           </div>
@@ -246,7 +242,7 @@
           <h4 class="text-xs font-bold text-slate-300 uppercase tracking-wide">Homepage Announcement Banner</h4>
           <p class="text-[11px] text-slate-400">Leave blank to hide the banner. Supports league updates or rules changes.</p>
           <div class="flex flex-col sm:flex-row gap-2">
-            <input id="adminBannerInput" type="text" placeholder="e.g. Scored adjusted for Monday; new Clueless rules active!"
+            <input id="adminBannerInput" type="text" placeholder="e.g. Scores adjusted for Monday; new Clueless rules active!"
                    class="flex-1 bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-400" />
             <button id="saveBannerBtn" type="button" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs px-4 py-2 rounded-lg transition cursor-pointer active:scale-95 shrink-0">
               Update Banner
@@ -322,7 +318,7 @@
     }
 
     // -------------------------------------------------------------
-    // CLIENT-SIDE CANVAS IMAGE COMPRESSION (Zero billing / No storage fees)
+    // CLIENT-SIDE CANVAS IMAGE COMPRESSION
     // -------------------------------------------------------------
     function processImageFile(file, { maxWidth, maxHeight, quality, squareCrop }) {
       return new Promise((resolve, reject) => {
@@ -335,7 +331,6 @@
             let destW = img.width, destH = img.height;
 
             if (squareCrop) {
-              // Center crop to square for avatars
               const size = Math.min(srcW, srcH);
               srcX = (srcW - size) / 2;
               srcY = (srcH - size) / 2;
@@ -344,7 +339,6 @@
               destW = Math.min(size, maxWidth);
               destH = destW;
             } else {
-              // Maintain aspect ratio for banter photos
               if (destW > maxWidth || destH > maxHeight) {
                 const ratio = Math.min(maxWidth / destW, maxHeight / destH);
                 destW = Math.round(destW * ratio);
@@ -379,11 +373,11 @@
         info: 'bg-slate-900/95 border-amber-400/60 text-slate-100 shadow-black/80'
       };
 
+      const icon = type === 'success' ? '✓' : type === 'error' ? '⚠️' : 'ℹ️';
+
       if (type === 'error') {
         message = "Text Xavier if you see this! -- " + message;
       }
-
-      const icon = type === 'success' ? '✓' : type === 'error' ? '⚠️' : 'ℹ️';
 
       toast.className = `w-[92vw] sm:w-auto sm:min-w-[280px] max-w-sm px-4 py-3 rounded-2xl border shadow-2xl text-xs sm:text-sm backdrop-blur-xl transition-all duration-300 transform translate-y-4 opacity-0 pointer-events-auto flex items-center justify-between gap-3 cursor-pointer select-none active:scale-98 ${styles[type] || styles.info}`;
       
@@ -485,30 +479,27 @@
     }
 
     function getPlayerName(pId) {
-      return appState.config.players[pId]?.name || `Player ${pId.replace('p', '')}`;
+      return appState.config.players[pId]?.name || `Player ${(pId || '').replace('p', '')}`;
     }
 
-function getPlayerAvatar(pId) {
-  if (appState.config.players[pId]?.avatar) {
-    return appState.config.players[pId].avatar;
-  }
-  
-  // Clean default avatar: colored circle with first letter initial (URL encoded to prevent HTML syntax breakage)
-  const initial = encodeURIComponent((getPlayerName(pId)[0] || '?').toUpperCase());
-  
-  // Deterministic background colors based on player ID
-  const bgPalette = {
-    p1: '%23f59e0b', // Amber
-    p2: '%233b82f6', // Blue
-    p3: '%2310b981', // Emerald
-    p4: '%238b5cf6', // Purple
-    p5: '%23ec4899', // Pink
-    p6: '%2306b6d4'  // Cyan
-  };
-  const bgColor = bgPalette[pId] || '%2364748b';
+    function getPlayerAvatar(pId) {
+      if (appState.config.players[pId]?.avatar) {
+        return appState.config.players[pId].avatar;
+      }
+      
+      const initial = encodeURIComponent((getPlayerName(pId)[0] || '?').toUpperCase());
+      const bgPalette = {
+        p1: '%23f59e0b',
+        p2: '%233b82f6',
+        p3: '%2310b981',
+        p4: '%238b5cf6',
+        p5: '%23ec4899',
+        p6: '%2306b6d4'
+      };
+      const bgColor = bgPalette[pId] || '%2364748b';
 
-  return `data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27%3E%3Crect%20width=%27100%25%27%20height=%27100%25%27%20fill=%27${bgColor}%27/%3E%3Ctext%20x=%2750%25%27%20y=%2754%25%27%20font-family=%27sans-serif%27%20font-weight=%27900%27%20font-size=%2746%27%20fill=%27%23020617%27%20text-anchor=%27middle%27%20dominant-baseline=%27middle%27%3E${initial}%3C/text%3E%3C/svg%3E`;
-}
+      return `data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20viewBox=%270%200%20100%20100%27%3E%3Crect%20width=%27100%25%27%20height=%27100%25%27%20fill=%27${bgColor}%27/%3E%3Ctext%20x=%2750%25%27%20y=%2754%25%27%20font-family=%27sans-serif%27%20font-weight=%27900%27%20font-size=%2746%27%20fill=%27%23020617%27%20text-anchor=%27middle%27%20dominant-baseline=%27middle%27%3E${initial}%3C/text%3E%3C/svg%3E`;
+    }
 
     async function ensureAuthenticated() {
       if (!firebase.auth) return;
@@ -587,6 +578,7 @@ function getPlayerAvatar(pId) {
         localStorage.setItem("selected_player_id", appState.activePlayer);
         updateAdminVisibility();
         updateActivePlayerUI();
+        renderConfigTab();
         renderEntryInputs();
         renderDailyTable();
         renderComments();
@@ -811,9 +803,11 @@ function getPlayerAvatar(pId) {
           <tr class="${isSelf ? 'bg-amber-400/5' : ''}">
             <td class="py-2.5 font-sans font-medium text-slate-200">
               <div class="flex items-center gap-2">
-                <img src="${avatarSrc}" alt="${displayName}" class="w-5 h-5 rounded-full object-cover border border-slate-700 shrink-0" />
-                <span>${displayName}</span>
-                ${isSelf ? '<span class="text-[10px] text-amber-400 font-bold ml-0.5">(You)</span>' : ''}
+                <div class="relative shrink-0">
+                  <img src="${avatarSrc}" alt="${displayName}" class="w-6 h-6 rounded-full object-cover border ${isSelf ? 'border-amber-400 ring-1 ring-amber-400/50' : 'border-slate-700'}" />
+                  ${isSelf ? '<span class="absolute -top-0.5 -right-0.5 w-2 h-2 bg-amber-400 rounded-full border border-slate-950"></span>' : ''}
+                </div>
+                <span class="${isSelf ? 'text-amber-300 font-semibold' : ''} truncate max-w-[110px] sm:max-w-none">${displayName}</span>
               </div>
             </td>
             ${scoreCells}
@@ -946,8 +940,7 @@ function getPlayerAvatar(pId) {
             <td class="py-2.5 font-sans font-medium text-slate-200">
               <div class="flex items-center gap-2">
                 <img src="${getPlayerAvatar(pId)}" alt="${getPlayerName(pId)}" class="w-5 h-5 rounded-full object-cover border border-slate-700 shrink-0" />
-                <span>${getPlayerName(pId)}</span>
-                ${isSelf ? '<span class="text-[10px] text-amber-400 font-bold ml-0.5">(You)</span>' : ''}
+                <span class="${isSelf ? 'text-amber-300 font-semibold' : ''}">${getPlayerName(pId)}</span>
               </div>
             </td>
             <td class="py-2.5 text-amber-400 font-bold text-sm">${s ? s.totalWins : 0} wins</td>
@@ -1004,7 +997,7 @@ function getPlayerAvatar(pId) {
     }
 
     // -------------------------------------------------------------
-    // COMMENTS WITH AVATARS, IMAGES & LIGHTBOX
+    // COMMENTS: DYNAMIC USER-SPECIFIC AVATARS & INLINE EDITING
     // -------------------------------------------------------------
     let pendingCommentImageBase64 = null;
 
@@ -1018,16 +1011,18 @@ function getPlayerAvatar(pId) {
       }
 
       list.innerHTML = dayComments.map((c, idx) => {
-        const isOwner = c.authorId === appState.activePlayer;
-        const avatarSrc = c.authorAvatar || getPlayerAvatar(c.authorId || 'p1');
+        const authorId = c.authorId || (Object.entries(appState.config.players).find(([_, p]) => p.name === c.player)?.[0]) || 'p1';
+        const isOwner = authorId === appState.activePlayer;
+        const avatarSrc = getPlayerAvatar(authorId);
+        const displayName = getPlayerName(authorId) || c.player;
 
         return `
           <div id="commentBox_${idx}" class="bg-slate-900/90 border border-slate-800 rounded-xl p-3 text-xs flex gap-3">
-            <img src="${avatarSrc}" alt="${c.player}" class="w-8 h-8 rounded-full object-cover border border-amber-400/40 shrink-0 mt-0.5" />
+            <img src="${avatarSrc}" alt="${displayName}" class="w-8 h-8 rounded-full object-cover border border-amber-400/40 shrink-0 mt-0.5" />
             <div class="flex-1 min-w-0">
               <div class="flex justify-between items-center mb-1">
                 <div class="flex items-center gap-2">
-                  <span class="font-bold text-amber-400 truncate">${c.player}</span>
+                  <span class="font-bold text-amber-400 truncate">${displayName}</span>
                   ${c.edited ? '<span class="text-[9px] text-slate-500 italic">(edited)</span>' : ''}
                 </div>
                 <div class="flex items-center gap-2 shrink-0">
@@ -1039,7 +1034,7 @@ function getPlayerAvatar(pId) {
               ${c.image ? `
                 <div class="mt-2.5">
                   <img src="${c.image}" alt="Banter attachment" onclick="openLightbox('${c.image}')"
-                       class="max-h-48 max-w-full rounded-lg border border-slate-700/80 cursor-pointer hover:opacity-95 transition shadow" />
+                       class="max-h-56 max-w-full rounded-lg border border-slate-700/80 cursor-pointer hover:opacity-95 transition shadow" />
                 </div>
               ` : ''}
             </div>
@@ -1102,11 +1097,11 @@ function getPlayerAvatar(pId) {
         if (!file) return;
 
         try {
-          // Optimized low quality compression for chat (640px max, 45% quality)
+          // Sharper 1080px max resolution at 72% JPEG quality
           pendingCommentImageBase64 = await processImageFile(file, {
-            maxWidth: 640,
-            maxHeight: 640,
-            quality: 0.45,
+            maxWidth: 1080,
+            maxHeight: 1080,
+            quality: 0.72,
             squareCrop: false
           });
 
@@ -1136,7 +1131,6 @@ function getPlayerAvatar(pId) {
         const newComment = {
           authorId: appState.activePlayer,
           player: getPlayerName(appState.activePlayer),
-          authorAvatar: getPlayerAvatar(appState.activePlayer),
           text: text,
           image: pendingCommentImageBase64 || null,
           time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
@@ -1146,7 +1140,6 @@ function getPlayerAvatar(pId) {
         if (!appState.comments[appState.date]) appState.comments[appState.date] = [];
         appState.comments[appState.date].push(newComment);
 
-        // Reset draft inputs
         input.value = "";
         pendingCommentImageBase64 = null;
         previewContainer.classList.add("hidden");
@@ -1157,7 +1150,7 @@ function getPlayerAvatar(pId) {
           try {
             await ensureAuthenticated();
             await db.ref(`comments/${appState.date}`).set(appState.comments[appState.date]);
-            showToast("Banter posted!", "success");
+            showToast("Comment posted!", "success");
           } catch (err) {
             console.error("Comment post error:", err);
             showToast(`Failed to post note: ${err.message}`, "error");
@@ -1304,23 +1297,24 @@ function getPlayerAvatar(pId) {
     }
 
     // -------------------------------------------------------------
-    // SETTINGS TAB & AVATAR UPLOAD HANDLERS
+    // SETTINGS TAB: PERMISSIONS-GATED PROFILE & AVATAR EDITING
     // -------------------------------------------------------------
     function renderConfigTab() {
-      const playerIds = getPlayerIds();
+      const isAdmin = appState.activePlayer === "p1";
+      const headingEl = document.getElementById("profileSectionHeading");
+      headingEl.innerText = isAdmin ? "All Player Profiles (Admin Full Access)" : "Your Profile & Avatar";
 
-      // 1. Player Profiles & Avatar Upload Cards
+      const visiblePlayerIds = isAdmin ? getPlayerIds() : [appState.activePlayer];
+
       const container = document.getElementById("playerProfilesConfig");
-      container.innerHTML = playerIds.map(id => {
+      container.innerHTML = visiblePlayerIds.map(id => {
         const isSelf = id === appState.activePlayer;
         const avatarSrc = getPlayerAvatar(id);
 
         return `
           <div class="bg-slate-900/60 border ${isSelf ? 'border-amber-400/50' : 'border-slate-800'} rounded-xl p-3 flex items-center gap-3">
-            <!-- Hidden file input for this player -->
             <input type="file" id="avatarFileInput_${id}" accept="image/*" class="hidden" onchange="handleAvatarUpload('${id}', this.files)" />
             
-            <!-- Clickable Avatar with Camera Icon Overlay -->
             <div class="relative cursor-pointer group shrink-0" onclick="document.getElementById('avatarFileInput_${id}').click()">
               <img id="avatarPreview_${id}" src="${avatarSrc}" alt="${getPlayerName(id)}" 
                    class="w-12 h-12 rounded-full object-cover border-2 border-slate-700 group-hover:border-amber-400 transition" />
@@ -1329,11 +1323,10 @@ function getPlayerAvatar(pId) {
               </div>
             </div>
 
-            <!-- Name Input -->
             <div class="flex-1 min-w-0">
               <div class="flex justify-between items-center mb-1">
                 <label class="text-[10px] text-slate-400 font-mono">${id.toUpperCase()}</label>
-                ${isSelf ? '<span class="text-[9px] text-amber-400 font-bold">(You)</span>' : ''}
+                ${isSelf ? '<span class="text-[9px] text-amber-400 font-bold">(Active)</span>' : ''}
               </div>
               <input id="cfg_player_${id}" value="${getPlayerName(id)}" 
                      class="bg-slate-950 border border-slate-700 text-xs rounded-lg px-2.5 py-1.5 w-full text-white focus:outline-none focus:border-amber-400" />
@@ -1342,7 +1335,6 @@ function getPlayerAvatar(pId) {
         `;
       }).join("");
 
-      // 2. Games List Section
       const gamesContainer = document.getElementById("gamesConfigList");
       gamesContainer.innerHTML = Object.entries(appState.config.games).map(([key, g]) => `
         <div class="flex items-center justify-between p-3 bg-slate-900/50 border border-slate-800 rounded-lg text-xs">
@@ -1355,10 +1347,15 @@ function getPlayerAvatar(pId) {
       `).join("");
     }
 
-    // Avatar upload handler preserving square high quality (256x256, 88% quality)
+    // Avatar upload handler (Square 256x256, 88% quality)
     window.handleAvatarUpload = async function(pId, files) {
       const file = files[0];
       if (!file) return;
+
+      if (appState.activePlayer !== "p1" && pId !== appState.activePlayer) {
+        showToast("You can only change your own avatar.", "error");
+        return;
+      }
 
       try {
         const base64 = await processImageFile(file, {
@@ -1388,29 +1385,28 @@ function getPlayerAvatar(pId) {
     function setupConfigHandlers() {
       renderConfigTab();
       document.getElementById("savePlayerNamesBtn").onclick = async () => {
-        const payload = {};
-        const playerIds = getPlayerIds();
-        playerIds.forEach(id => {
+        const isAdmin = appState.activePlayer === "p1";
+        const targetIds = isAdmin ? getPlayerIds() : [appState.activePlayer];
+
+        const updates = {};
+        targetIds.forEach(id => {
           const val = document.getElementById(`cfg_player_${id}`)?.value.trim();
           if (val) {
-            payload[id] = {
-              name: val,
-              avatar: appState.config.players[id]?.avatar || ""
-            };
             appState.config.players[id].name = val;
+            updates[`config/players/${id}/name`] = val;
           }
         });
 
         if (db) {
           try {
             await ensureAuthenticated();
-            await db.ref("config/players").set(payload);
+            await db.ref().update(updates);
             const status = document.getElementById("playerSaveStatus");
             status.classList.remove("hidden");
             setTimeout(() => status.classList.add("hidden"), 3000);
-            showToast("Player profiles saved!", "success");
+            showToast("Profile updated successfully!", "success");
           } catch (err) {
-            showToast(`Failed to save names: ${err.message}`, "error");
+            showToast(`Failed to save: ${err.message}`, "error");
           }
         }
 
