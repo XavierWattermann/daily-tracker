@@ -575,10 +575,13 @@
     try {
       firebase.initializeApp(firebaseConfig);
 
-      // Initialize App Check with reCAPTCHA v3
+      // Initialize App Check with reCAPTCHA Enterprise (Fraud Defense)
       if (firebase.appCheck && RECAPTCHA_SITE_KEY && RECAPTCHA_SITE_KEY !== "YOUR_RECAPTCHA_V3_SITE_KEY") {
         const appCheck = firebase.appCheck();
-        appCheck.activate(RECAPTCHA_SITE_KEY, true);
+        const provider = firebase.appCheck.ReCaptchaEnterpriseProvider
+          ? new firebase.appCheck.ReCaptchaEnterpriseProvider(RECAPTCHA_SITE_KEY)
+          : RECAPTCHA_SITE_KEY;
+        appCheck.activate(provider, true);
       }
 
       db = firebase.database();
