@@ -9,6 +9,7 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-check-compat.js"></script>
   <style>
     .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); }
   </style>
@@ -556,6 +557,10 @@
     // -------------------------------------------------------------
     const PASSPHRASE = "clownz";
 
+    // reCAPTCHA v3 site key for Firebase App Check
+    // Replace "YOUR_RECAPTCHA_V3_SITE_KEY" with the site key from Google reCAPTCHA / Firebase Console -> App Check
+    const RECAPTCHA_SITE_KEY = "6LeNIuktAAAAAFhkhITcxXtqUJ6wjsrHPn6ZScWU";
+
     const firebaseConfig = {
       apiKey: "AIzaSyA3KaAE_BmoQFScygVXbUwTGTym7ffAKpg",
       authDomain: "daily-game-tracker.firebaseapp.com",
@@ -569,6 +574,13 @@
     let db = null;
     try {
       firebase.initializeApp(firebaseConfig);
+
+      // Initialize App Check with reCAPTCHA v3
+      if (firebase.appCheck && RECAPTCHA_SITE_KEY && RECAPTCHA_SITE_KEY !== "YOUR_RECAPTCHA_V3_SITE_KEY") {
+        const appCheck = firebase.appCheck();
+        appCheck.activate(RECAPTCHA_SITE_KEY, true);
+      }
+
       db = firebase.database();
     } catch (e) {
       console.error("Firebase init failed:", e);
@@ -820,17 +832,31 @@
     const passphraseInput = document.getElementById("passphraseInput");
     const authError = document.getElementById("authError");
 
-    function checkAuth() {
+    async function checkAuth() {
       if (localStorage.getItem("league_unlocked") === PASSPHRASE) {
         authGate.classList.add("hidden");
         appContainer.classList.remove("hidden");
 
         if (firebase.auth) {
-          firebase.auth().onAuthStateChanged((user) => {
-            if (!user) {
-              firebase.auth().signInAnonymously().catch(err => console.error("Auto sign-in error:", err));
+          try {
+            if (!firebase.auth().currentUser) {
+              await new Promise((resolve) => {
+                const unsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+                  unsubscribe();
+                  if (!user) {
+                    try {
+                      await firebase.auth().signInAnonymously();
+                    } catch (err) {
+                      console.error("Auto sign-in error:", err);
+                    }
+                  }
+                  resolve();
+                });
+              });
             }
-          });
+          } catch (err) {
+            console.error("Auth check error:", err);
+          }
         }
         initApp();
       } else {
@@ -839,12 +865,12 @@
       }
     }
 
-    authForm.addEventListener("submit", (e) => {
+    authForm.addEventListener("submit", async (e) => {
       e.preventDefault();
       if (passphraseInput.value.trim().toLowerCase() === PASSPHRASE) {
         localStorage.setItem("league_unlocked", PASSPHRASE);
         authError.classList.add("hidden");
-        checkAuth();
+        await checkAuth();
       } else {
         authError.classList.remove("hidden");
         passphraseInput.value = "";
@@ -908,10 +934,7 @@
           renderAll();
         });
 
-        db.ref("comments").on("value", (snap) => {
-          appState.comments = snap.val() || {};
-          renderComments();
-        });
+        listenToDayComments(appState.date);
 
         db.ref("config/players").on("value", (snap) => {
           const remotePlayers = snap.val();
@@ -2110,8 +2133,28 @@
     // COMMENTS: DYNAMIC USER-SPECIFIC AVATARS & INLINE EDITING
     // -------------------------------------------------------------
     let pendingCommentImageBase64 = null;
+    let currentCommentsDate = null;
+    let currentCommentsRef = null;
+    let currentCommentsListener = null;
+
+    function listenToDayComments(dateStr) {
+      if (!db || !dateStr) return;
+      if (currentCommentsDate === dateStr && currentCommentsRef) return;
+
+      if (currentCommentsRef && currentCommentsListener) {
+        currentCommentsRef.off("value", currentCommentsListener);
+      }
+      currentCommentsDate = dateStr;
+      currentCommentsRef = db.ref(`comments/${dateStr}`);
+      currentCommentsListener = currentCommentsRef.on("value", (snap) => {
+        if (!appState.comments) appState.comments = {};
+        appState.comments[dateStr] = snap.val() || [];
+        renderComments();
+      });
+    }
 
     function renderComments() {
+      listenToDayComments(appState.date);
       const list = document.getElementById("commentsList");
       const dayComments = appState.comments[appState.date] || [];
 
