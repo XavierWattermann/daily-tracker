@@ -819,11 +819,38 @@
       showToast(`Viewing scores for ${dateStr}`, "info");
     };
 
+    let authPromise = null;
+
     async function ensureAuthenticated() {
       if (!firebase.auth) return;
-      if (!firebase.auth().currentUser) {
-        await firebase.auth().signInAnonymously();
-      }
+      if (firebase.auth().currentUser) return firebase.auth().currentUser;
+      if (authPromise) return authPromise;
+
+      authPromise = new Promise((resolve) => {
+        let resolved = false;
+        const unsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
+          if (resolved) return;
+          if (user) {
+            resolved = true;
+            unsubscribe();
+            resolve(user);
+          } else {
+            try {
+              const cred = await firebase.auth().signInAnonymously();
+              resolved = true;
+              unsubscribe();
+              resolve(cred.user);
+            } catch (err) {
+              console.error("Auto sign-in error:", err);
+              resolved = true;
+              unsubscribe();
+              resolve(null);
+            }
+          }
+        });
+      });
+
+      return authPromise;
     }
 
     // -------------------------------------------------------------
@@ -836,31 +863,14 @@
     const authError = document.getElementById("authError");
 
     async function checkAuth() {
+      // Pre-warm anonymous auth in the background on initial load
+      ensureAuthenticated().catch(err => console.error("Pre-auth error:", err));
+
       if (localStorage.getItem("league_unlocked") === PASSPHRASE) {
         authGate.classList.add("hidden");
         appContainer.classList.remove("hidden");
 
-        if (firebase.auth) {
-          try {
-            if (!firebase.auth().currentUser) {
-              await new Promise((resolve) => {
-                const unsubscribe = firebase.auth().onAuthStateChanged(async (user) => {
-                  unsubscribe();
-                  if (!user) {
-                    try {
-                      await firebase.auth().signInAnonymously();
-                    } catch (err) {
-                      console.error("Auto sign-in error:", err);
-                    }
-                  }
-                  resolve();
-                });
-              });
-            }
-          } catch (err) {
-            console.error("Auth check error:", err);
-          }
-        }
+        await ensureAuthenticated();
         initApp();
       } else {
         authGate.classList.remove("hidden");
@@ -963,6 +973,18 @@
           appState.config.banner = snap.val() || "";
           renderBanner();
         });
+
+        // Re-verify comments listener if auth state updates
+        if (firebase.auth) {
+          firebase.auth().onAuthStateChanged((user) => {
+            if (user && appState.date) {
+              if (!currentCommentsListener || !appState.comments || appState.comments[appState.date] === undefined) {
+                currentCommentsDate = null;
+                listenToDayComments(appState.date);
+              }
+            }
+          });
+        }
       }
 
       renderAll();
@@ -2142,24 +2164,64 @@
 
     function listenToDayComments(dateStr) {
       if (!db || !dateStr) return;
-      if (currentCommentsDate === dateStr && currentCommentsRef) return;
+      if (currentCommentsDate === dateStr && currentCommentsRef && currentCommentsListener) return;
 
       if (currentCommentsRef && currentCommentsListener) {
-        currentCommentsRef.off("value", currentCommentsListener);
+        try {
+          currentCommentsRef.off("value", currentCommentsListener);
+        } catch (e) {}
+        currentCommentsListener = null;
       }
       currentCommentsDate = dateStr;
       currentCommentsRef = db.ref(`comments/${dateStr}`);
-      currentCommentsListener = currentCommentsRef.on("value", (snap) => {
-        if (!appState.comments) appState.comments = {};
-        appState.comments[dateStr] = snap.val() || [];
-        renderComments();
-      });
+
+      currentCommentsListener = currentCommentsRef.on(
+        "value",
+        (snap) => {
+          if (!appState.comments) appState.comments = {};
+          const val = snap.val();
+          // Normalize to Array whether stored as Array or Object
+          appState.comments[dateStr] = Array.isArray(val)
+            ? val
+            : (val ? Object.values(val) : []);
+          renderComments();
+        },
+        (error) => {
+          console.warn(`Comments read error for ${dateStr}:`, error);
+          // If canceled or permission-denied due to in-flight auth handshake, reset so it can re-attach
+          currentCommentsDate = null;
+          currentCommentsRef = null;
+          currentCommentsListener = null;
+          setTimeout(() => {
+            if (appState.date === dateStr) {
+              listenToDayComments(dateStr);
+            }
+          }, 1500);
+        }
+      );
     }
 
     function renderComments() {
       listenToDayComments(appState.date);
       const list = document.getElementById("commentsList");
-      const dayComments = appState.comments[appState.date] || [];
+      if (!list) return;
+
+      const dayCommentsRaw = appState.comments ? appState.comments[appState.date] : undefined;
+
+      // When comments haven't finished loading from Firebase yet
+      if (dayCommentsRaw === undefined) {
+        list.innerHTML = `
+          <div class="flex items-center gap-2.5 py-4 text-xs text-slate-500 animate-pulse">
+            <span class="inline-block w-3.5 h-3.5 border-2 border-amber-400 border-t-transparent rounded-full animate-spin"></span>
+            <span>Loading notes & banter...</span>
+          </div>
+        `;
+        return;
+      }
+
+      const dayComments = Array.isArray(dayCommentsRaw)
+        ? dayCommentsRaw
+        : (dayCommentsRaw ? Object.values(dayCommentsRaw) : []);
 
       if (!dayComments.length) {
         list.innerHTML = `<p class="text-xs text-slate-500 italic">No notes left for this day yet.</p>`;
